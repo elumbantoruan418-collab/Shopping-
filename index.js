@@ -1,95 +1,107 @@
 const admin = require("firebase-admin");
 const crypto = require("crypto");
+const daftarUser = require("./users.js"); // Pastikan file users.js sudah lo buat
 
 // 1. Inisialisasi Firebase
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(require("./serviceAccountKey.json")),
-    databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app"
-  });
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(require("./serviceAccountKey.json")),
+      databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app"
+    });
+  }
+  console.log(">> [FIREBASE] Connected to WinzShop Database.");
+} catch (error) {
+  console.error(">> [FATAL ERROR] Gagal konek Firebase:", error.message);
+  process.exit(1);
 }
 
 const db = admin.database();
 
-// --- FUNGSI CORE DASHBOARD ---
+// --- FUNGSI CORE ---
 
 /**
- * 1. Fungsi Buat User & API Key
- * Dipanggil kalau mau nambah user baru lewat terminal/logic.
+ * 1. Sinkronisasi User dari users.js ke Firebase
+ * Otomatis daftarin user baru kalau belum ada di database.
  */
-async function buatUser(username, password) {
-  const apiKey = "WINZ-" + crypto.randomBytes(12).toString("hex").toUpperCase();
-  const userData = {
-    username: username,
-    password: password,
-    apikey: apiKey,
-    saldo: 0,
-    role: "user",
-    created_at: new Date().toLocaleString()
-  };
+async function sinkronUser() {
+  console.log(">> [SYSTEM] Checking users synchronization...");
+  for (let u of daftarUser) {
+    const userRef = db.ref("users/" + u.username);
+    const snapshot = await userRef.once("value");
 
-  await db.ref("users/" + username).set(userData);
-  // Simpan index API Key biar nyarinya cepet pas validasi
-  await db.ref("api_keys/" + apiKey).set({ username: username });
-  
-  console.log(`\n==============================`);
-  console.log(`>> USER BARU BERHASIL DIBUAT`);
-  console.log(`>> Username: ${username}`);
-  console.log(`>> API Key : ${apiKey}`);
-  console.log(`==============================\n`);
+    if (!snapshot.exists()) {
+      const apiKey = "WINZ-" + crypto.randomBytes(12).toString("hex").toUpperCase();
+      await userRef.set({
+        username: u.username,
+        password: u.password,
+        apikey: apiKey,
+        saldo: u.saldo || 0,
+        role: u.role || "user",
+        created_at: new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
+      });
+      // Simpan mapping API Key biar akses cepet
+      await db.ref("api_keys/" + apiKey).set({ username: u.username });
+      console.log(`>> [NEW USER] ${u.username} terdaftar. API Key: ${apiKey}`);
+    }
+  }
+  console.log(">> [SYSTEM] Sinkronisasi Selesai.");
 }
 
 /**
- * 2. Fungsi Validasi API Key
- * Gunakan fungsi ini di bot lo buat ngecek user boleh akses atau nggak.
+ * 2. Fungsi Validasi API Key (Untuk Bot/API)
  */
 async function cekApiKey(key) {
   if (!key) return { valid: false, pesan: "API Key kosong!" };
-
-  const keyRef = db.ref("api_keys/" + key);
-  const snapshot = await keyRef.once("value");
   
-  if (snapshot.exists()) {
-    const dataKey = snapshot.val();
-    // Ambil data detail user-nya
-    const userSnapshot = await db.ref("users/" + dataKey.username).once("value");
-    return { valid: true, user: userSnapshot.val() };
-  } else {
-    return { valid: false, pesan: "API Key tidak valid/salah!" };
+  try {
+    const keyRef = db.ref("api_keys/" + key);
+    const snapshot = await keyRef.once("value");
+    
+    if (snapshot.exists()) {
+      const dataKey = snapshot.val();
+      const userSnapshot = await db.ref("users/" + dataKey.username).once("value");
+      return { valid: true, user: userSnapshot.val() };
+    }
+    return { valid: false, pesan: "API Key tidak terdaftar!" };
+  } catch (err) {
+    return { valid: false, pesan: "Database Error." };
   }
 }
 
 /**
- * 3. Fungsi Cek Login Web
+ * 3. Fungsi Cek Login (Untuk Web login.html)
  */
 async function cekLogin(username, password) {
-  const userRef = db.ref("users/" + username);
-  const snapshot = await userRef.once("value");
-  const data = snapshot.val();
+  try {
+    const userRef = db.ref("users/" + username);
+    const snapshot = await userRef.once("value");
+    const data = snapshot.val();
 
-  if (data && data.password === password) {
-    return { status: true, data: data };
-  } else {
+    if (data && data.password === password) {
+      return { status: true, data: data };
+    }
     return { status: false, pesan: "Username atau Password salah!" };
+  } catch (err) {
+    return { status: false, pesan: "Gagal verifikasi login." };
   }
 }
 
-// --- OTOMATISASI ---
+// --- OTOMATISASI & MONITORING ---
 
-// Laporan Online ke Vercel tiap 10 detik
+// Kirim status online ke Vercel/Web tiap 10 detik
 setInterval(() => {
   db.ref("status_panel").update({ 
     last_update: new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
     unix_time: Date.now(),
     status: "Online"
-  });
+  }).catch(() => {}); // Abaikan error silent
 }, 10000);
 
-// --- CONTOH CARA PAKE (Testing) ---
-// Buka komen di bawah kalau mau coba buat user pertama kali:
-// buatUser("winz_admin", "winz123");
+// Jalankan sinkronisasi saat script dimulai
+sinkronUser();
 
-console.log(">> [WINZ XTR] Dashboard & API Key System is RUNNING...");
+console.log(">> [WINZ XTR] SYSTEM READY & RUNNING...");
 
-// Export biar bisa dipake di file lain (misal bot.js)
-module.exports = { cekApiKey, buatUser, cekLogin };
+// Export agar bisa digunakan di bot Telegram/WhatsApp lo
+module.exports = { cekApiKey, cekLogin, db };
