@@ -1,107 +1,75 @@
-const admin = require("firebase-admin");
-const crypto = require("crypto");
-const daftarUser = require("./users.js"); // Pastikan file users.js sudah lo buat
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winz Access - Login System</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        body { background: #000; color: #ff0000; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { border: 2px solid #ff0000; padding: 30px; box-shadow: 0 0 15px #ff0000; background: #0a0a0a; width: 300px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid #ff0000; color: #fff; box-sizing: border-box; text-align: center; }
+        button { width: 100%; padding: 10px; background: #ff0000; border: none; color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+        #status { margin-top: 15px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
 
-// 1. Inisialisasi Firebase
-try {
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(require("./serviceAccountKey.json")),
-      databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app"
+<div class="login-card">
+    <h2>WINZ SYSTEM</h2>
+    <div id="panel-status" style="font-size: 0.7em; margin-bottom: 10px;">Checking Panel...</div>
+    <input type="text" id="user" placeholder="USERNAME">
+    <input type="password" id="pass" placeholder="PASSWORD">
+    <button onclick="login()">ENTER SYSTEM</button>
+    <div id="status">WAITING...</div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyANRhJ2YCC1-zqEkZhrIUnluUQcg9A5HrM", //
+        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app", //
+        projectId: "winzshop-e91e0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Pantau Status Panel (Online/Offline)
+    db.ref("status_panel").on("value", (snapshot) => {
+        const data = snapshot.val();
+        const pStatus = document.getElementById("panel-status");
+        if (data) {
+            const isOnline = (Date.now() - data.unix_time) < 30000;
+            pStatus.innerHTML = isOnline ? "<span style='color:#0f0'>PANEL: ONLINE</span>" : "<span style='color:#f00'>PANEL: OFFLINE</span>";
+        }
     });
-  }
-  console.log(">> [FIREBASE] Connected to WinzShop Database.");
-} catch (error) {
-  console.error(">> [FATAL ERROR] Gagal konek Firebase:", error.message);
-  process.exit(1);
-}
 
-const db = admin.database();
+    function login() {
+        const username = document.getElementById('user').value;
+        const password = document.getElementById('pass').value;
+        const status = document.getElementById('status');
 
-// --- FUNGSI CORE ---
+        if (!username || !password) {
+            status.innerText = "ISI SEMUA KOLOM!";
+            return;
+        }
 
-/**
- * 1. Sinkronisasi User dari users.js ke Firebase
- * Otomatis daftarin user baru kalau belum ada di database.
- */
-async function sinkronUser() {
-  console.log(">> [SYSTEM] Checking users synchronization...");
-  for (let u of daftarUser) {
-    const userRef = db.ref("users/" + u.username);
-    const snapshot = await userRef.once("value");
+        status.innerText = "VERIFYING...";
 
-    if (!snapshot.exists()) {
-      const apiKey = "WINZ-" + crypto.randomBytes(12).toString("hex").toUpperCase();
-      await userRef.set({
-        username: u.username,
-        password: u.password,
-        apikey: apiKey,
-        saldo: u.saldo || 0,
-        role: u.role || "user",
-        created_at: new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
-      });
-      // Simpan mapping API Key biar akses cepet
-      await db.ref("api_keys/" + apiKey).set({ username: u.username });
-      console.log(`>> [NEW USER] ${u.username} terdaftar. API Key: ${apiKey}`);
+        db.ref('users/' + username).once('value').then((snapshot) => {
+            const data = snapshot.val();
+            if (data && data.password === password) {
+                status.style.color = "#00ff00";
+                status.innerText = "ACCESS GRANTED!";
+                localStorage.setItem("winz_user", JSON.stringify(data));
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+            } else {
+                status.innerText = "WRONG USER/PASS!";
+            }
+        });
     }
-  }
-  console.log(">> [SYSTEM] Sinkronisasi Selesai.");
-}
-
-/**
- * 2. Fungsi Validasi API Key (Untuk Bot/API)
- */
-async function cekApiKey(key) {
-  if (!key) return { valid: false, pesan: "API Key kosong!" };
-  
-  try {
-    const keyRef = db.ref("api_keys/" + key);
-    const snapshot = await keyRef.once("value");
-    
-    if (snapshot.exists()) {
-      const dataKey = snapshot.val();
-      const userSnapshot = await db.ref("users/" + dataKey.username).once("value");
-      return { valid: true, user: userSnapshot.val() };
-    }
-    return { valid: false, pesan: "API Key tidak terdaftar!" };
-  } catch (err) {
-    return { valid: false, pesan: "Database Error." };
-  }
-}
-
-/**
- * 3. Fungsi Cek Login (Untuk Web login.html)
- */
-async function cekLogin(username, password) {
-  try {
-    const userRef = db.ref("users/" + username);
-    const snapshot = await userRef.once("value");
-    const data = snapshot.val();
-
-    if (data && data.password === password) {
-      return { status: true, data: data };
-    }
-    return { status: false, pesan: "Username atau Password salah!" };
-  } catch (err) {
-    return { status: false, pesan: "Gagal verifikasi login." };
-  }
-}
-
-// --- OTOMATISASI & MONITORING ---
-
-// Kirim status online ke Vercel/Web tiap 10 detik
-setInterval(() => {
-  db.ref("status_panel").update({ 
-    last_update: new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
-    unix_time: Date.now(),
-    status: "Online"
-  }).catch(() => {}); // Abaikan error silent
-}, 10000);
-
-// Jalankan sinkronisasi saat script dimulai
-sinkronUser();
-
-console.log(">> [WINZ XTR] SYSTEM READY & RUNNING...");
-
-// Export agar bisa digunakan di bot Telegram/WhatsApp lo
-module.exports = { cekApiKey, cekLogin, db };
+</script>
+</body>
+</html>
