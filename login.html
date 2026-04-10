@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinzShop - Login Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --main-color: #ff0000; --bg-color: #0a0a0a; --text-color: #ffffff; }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-box {
+            background: rgba(20, 20, 20, 0.9);
+            padding: 40px;
+            border: 2px solid var(--main-color);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            width: 350px;
+            text-align: center;
+        }
+        h2 { margin-bottom: 30px; letter-spacing: 3px; color: var(--main-color); text-shadow: 0 0 10px var(--main-color); }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: white;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input:focus { border-color: var(--main-color); outline: none; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--main-color);
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        button:hover { background: #b30000; box-shadow: 0 0 15px var(--main-color); }
+        #msg { margin-top: 15px; font-size: 0.9em; }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>WINZ ACCESS</h2>
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button onclick="handleLogin()">ENTER SYSTEM</button>
+    <div id="msg"></div>
+</div>
+
+<script>
+    // Konfigurasi Firebase lo Win
+    const firebaseConfig = {
+        apiKey: "AIzaSyANRhJ2YCC1-zqEkZhrIUnluUQcg9A5HrM",
+        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "winzshop-e91e0"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    async function handleLogin() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        const msg = document.getElementById('msg');
+
+        if(!user || !pass) {
+            msg.innerHTML = "<span class='error'>Isi semua kolom!</span>";
+            return;
+        }
+
+        msg.innerHTML = "Checking Access...";
+
+        // Cek ke folder users/[username]
+        db.ref('users/' + user).once('value').then((snapshot) => {
+            const data = snapshot.val();
+            
+            if (data && data.password === pass) {
+                msg.innerHTML = "<span class='success'>ACCESS GRANTED!</span>";
+                // Simpan data login sementara di browser
+                sessionStorage.setItem("isLoggedIn", "true");
+                sessionStorage.setItem("username", user);
+                sessionStorage.setItem("apikey", data.apikey);
+                
+                // Pindah ke halaman dashboard setelah 1 detik
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 1500);
+            } else {
+                msg.innerHTML = "<span class='error'>Username/Password Salah!</span>";
+            }
+        }).catch((error) => {
+            msg.innerHTML = "<span class='error'>Error: " + error.message + "</span>";
+        });
+    }
+</script>
+
+</body>
+</html>
