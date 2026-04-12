@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winz System - Login & Register</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --red: #ff0000; --bg: #000; --card: #0a0a0a; }
+        body { background: var(--bg); color: var(--red); font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { border: 2px solid var(--red); padding: 30px; box-shadow: 0 0 15px var(--red); background: var(--card); width: 320px; text-align: center; }
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--red); }
+        .tab { flex: 1; padding: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .tab.active { background: var(--red); color: #000; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid var(--red); color: #fff; box-sizing: border-box; text-align: center; border-radius: 5px; }
+        button { width: 100%; padding: 12px; background: var(--red); border: none; color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
+        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
+        #status { margin-top: 15px; font-size: 0.8em; font-weight: bold; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>WINZ SYSTEM</h2>
+    <div id="panel-status" style="font-size: 0.7em; margin-bottom: 10px;">Checking Panel...</div>
+
+    <div class="tabs">
+        <div id="tab-login" class="tab active" onclick="showTab('login')">LOGIN</div>
+        <div id="tab-reg" class="tab" onclick="showTab('reg')">DAFTAR</div>
+    </div>
+
+    <div id="form-login">
+        <input type="text" id="l-user" placeholder="USERNAME">
+        <input type="password" id="l-pass" placeholder="PASSWORD">
+        <button onclick="handleLogin()">ENTER SYSTEM</button>
+    </div>
+
+    <div id="form-reg" class="hidden">
+        <input type="text" id="r-user" placeholder="USERNAME BARU">
+        <input type="password" id="r-pass" placeholder="PASSWORD BARU">
+        <button onclick="handleRegister()">CREATE ACCOUNT</button>
+    </div>
+
+    <div id="status">WAITING...</div>
+</div>
+
+<script>
+    // Konfigurasi Database byrakha-dcfda
+    const firebaseConfig = {
+        apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
+        databaseURL: "https://byrakha-dcfda-default-rtdb.firebaseio.com",
+        projectId: "byrakha-dcfda"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Pantau Status Panel lo (Koneksi ke VPS)
+    db.ref("status_panel").on("value", (snapshot) => {
+        const data = snapshot.val();
+        const pStatus = document.getElementById("panel-status");
+        if (data) {
+            const isOnline = (Date.now() - data.unix_time) < 30000;
+            pStatus.innerHTML = isOnline ? "<span style='color:#0f0'>PANEL: ONLINE</span>" : "<span style='color:#f00'>PANEL: OFFLINE</span>";
+        }
+    });
+
+    // Pindah Tab
+    function showTab(type) {
+        document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
+        document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
+        document.getElementById('tab-login').classList.toggle('active', type === 'login');
+        document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
+        document.getElementById('status').innerText = "WAITING...";
+    }
+
+    // Fungsi Daftar Akun
+    async function handleRegister() {
+        const user = document.getElementById('r-user').value.trim();
+        const pass = document.getElementById('r-pass').value.trim();
+        const status = document.getElementById('status');
+
+        if (!user || !pass) { status.innerText = "ISI SEMUA!"; return; }
+        status.innerText = "REGISTERING...";
+
+        const userRef = db.ref('users/' + user);
+        const snapshot = await userRef.once('value');
+
+        if (snapshot.exists()) {
+            status.innerText = "USERNAME SUDAH ADA!";
+        } else {
+            // Generate API Key baru ala WINZ XTR
+            const randomHex = Math.random().toString(16).slice(2, 14).toUpperCase();
+            const apiKey = "WINZ-" + randomHex;
+
+            await userRef.set({
+                username: user,
+                password: pass,
+                apikey: apiKey,
+                saldo: 0,
+                role: "user",
+                created_at: new Date().toLocaleString("id-ID")
+            });
+
+            await db.ref("api_keys/" + apiKey).set({ username: user });
+            status.style.color = "#00ff00";
+            status.innerText = "DAFTAR BERHASIL! SILAHKAN LOGIN.";
+            setTimeout(() => showTab('login'), 2000);
+        }
+    }
+
+    // Fungsi Login
+    function handleLogin() {
+        const user = document.getElementById('l-user').value.trim();
+        const pass = document.getElementById('l-pass').value.trim();
+        const status = document.getElementById('status');
+
+        if (!user || !pass) { status.innerText = "ISI SEMUA!"; return; }
+        status.innerText = "VERIFYING...";
+
+        db.ref('users/' + user).once('value').then((snapshot) => {
+            const data = snapshot.val();
+            if (data && data.password === pass) {
+                status.style.color = "#00ff00";
+                status.innerText = "ACCESS GRANTED!";
+                localStorage.setItem("winz_user", JSON.stringify(data));
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+            } else {
+                status.style.color = "#ff0000";
+                status.innerText = "WRONG USER/PASS!";
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
