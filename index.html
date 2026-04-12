@@ -3,133 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Winz System - Login & Register</title>
+    <title>WinzStore - Solusi Digital Terpercaya</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
     <style>
-        :root { --red: #ff0000; --bg: #000; --card: #0a0a0a; }
-        body { background: var(--bg); color: var(--red); font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { border: 2px solid var(--red); padding: 30px; box-shadow: 0 0 15px var(--red); background: var(--card); width: 320px; text-align: center; }
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid var(--red); }
-        .tab { flex: 1; padding: 10px; cursor: pointer; transition: 0.3s; font-weight: bold; }
-        .tab.active { background: var(--red); color: #000; }
-        input { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid var(--red); color: #fff; box-sizing: border-box; text-align: center; border-radius: 5px; }
-        button { width: 100%; padding: 12px; background: var(--red); border: none; color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; text-transform: uppercase; }
-        button:hover { background: #fff; box-shadow: 0 0 10px #fff; }
-        #status { margin-top: 15px; font-size: 0.8em; font-weight: bold; }
+        :root { --primary: #ee4d2d; --bg: #f5f5f5; --white: #ffffff; --text: #333; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: var(--white); padding: 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .logo { color: var(--primary); font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #777; margin-bottom: 30px; font-size: 14px; }
+        
+        .tabs { display: flex; margin-bottom: 25px; gap: 10px; }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-bottom: 2px solid #ddd; font-weight: 600; color: #555; }
+        .tab.active { border-color: var(--primary); color: var(--primary); }
+
+        .input-group { margin-bottom: 15px; }
+        label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--primary); }
+
+        button { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { opacity: 0.9; }
+        
+        #status { margin-top: 20px; font-size: 13px; text-align: center; padding: 10px; border-radius: 4px; display: none; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>WINZ SYSTEM</h2>
-    <div id="panel-status" style="font-size: 0.7em; margin-bottom: 10px;">Checking Panel...</div>
+<div id="loader" style="color: var(--primary); font-weight: bold;">MEMERIKSA SESI...</div>
 
-    <div class="tabs">
-        <div id="tab-login" class="tab active" onclick="showTab('login')">LOGIN</div>
-        <div id="tab-reg" class="tab" onclick="showTab('reg')">DAFTAR</div>
+<div class="container hidden" id="main-content">
+    <div class="logo">WinzStore</div>
+    <div class="subtitle">Marketplace Akun & Layanan Digital</div>
+
+    <div class="tabs" id="main-tabs">
+        <div id="tab-login" class="tab active" onclick="showTab('login')">Login</div>
+        <div id="tab-reg" class="tab" onclick="showTab('reg')">Daftar</div>
     </div>
 
     <div id="form-login">
-        <input type="text" id="l-user" placeholder="USERNAME">
-        <input type="password" id="l-pass" placeholder="PASSWORD">
-        <button onclick="handleLogin()">ENTER SYSTEM</button>
+        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Masukkan username"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="l-pass" placeholder="Masukkan password"></div>
+        <button onclick="handleLogin()">Masuk Sekarang</button>
     </div>
 
     <div id="form-reg" class="hidden">
-        <input type="text" id="r-user" placeholder="USERNAME BARU">
-        <input type="password" id="r-pass" placeholder="PASSWORD BARU">
-        <button onclick="handleRegister()">CREATE ACCOUNT</button>
+        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Buat username"></div>
+        <div class="input-group"><label>Email</label><input type="email" id="r-email" placeholder="contoh@gmail.com"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Minimal 6 karakter"></div>
+        <button onclick="sendOTP()">Daftar & Kirim OTP</button>
     </div>
 
-    <div id="status">WAITING...</div>
+    <div id="form-otp" class="hidden">
+        <p style="font-size: 13px; color: #666; text-align: center;">Kode OTP dikirim ke email Anda. Cek folder Inbox/Spam.</p>
+        <div class="input-group"><label>Masukkan Kode OTP</label><input type="text" id="v-otp" placeholder="6 Digit Kode"></div>
+        <button onclick="verifyAndSave()">Verifikasi Akun</button>
+    </div>
+
+    <div id="status"></div>
 </div>
 
 <script>
-    // Konfigurasi Database byrakha-dcfda
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://byrakha-dcfda-default-rtdb.firebaseio.com",
         projectId: "byrakha-dcfda"
     };
-
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    emailjs.init("USER_ID_EMAILJS_LO"); // <--- GANTI INI
 
-    // Pantau Status Panel lo (Koneksi ke VPS)
-    db.ref("status_panel").on("value", (snapshot) => {
-        const data = snapshot.val();
-        const pStatus = document.getElementById("panel-status");
-        if (data) {
-            const isOnline = (Date.now() - data.unix_time) < 30000;
-            pStatus.innerHTML = isOnline ? "<span style='color:#0f0'>PANEL: ONLINE</span>" : "<span style='color:#f00'>PANEL: OFFLINE</span>";
+    let generatedOTP = "";
+    let tempUserData = {};
+
+    // --- CEK SESI OTOMATIS (Biar gak perlu login terus) ---
+    window.onload = function() {
+        const savedUser = localStorage.getItem("winz_user");
+        if (savedUser) {
+            window.location.href = "dashboard.html";
+        } else {
+            document.getElementById('loader').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
         }
-    });
+    };
 
-    // Pindah Tab
+    function notify(msg, type) {
+        const s = document.getElementById('status');
+        s.innerText = msg;
+        s.style.display = 'block';
+        s.style.background = type === 'error' ? '#fdecea' : '#eafaf1';
+        s.style.color = type === 'error' ? '#ea4335' : '#27ae60';
+    }
+
     function showTab(type) {
         document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
         document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
+        document.getElementById('form-otp').classList.add('hidden');
+        document.getElementById('main-tabs').classList.toggle('hidden', type === 'otp');
         document.getElementById('tab-login').classList.toggle('active', type === 'login');
         document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
-        document.getElementById('status').innerText = "WAITING...";
     }
 
-    // Fungsi Daftar Akun
-    async function handleRegister() {
+    async function sendOTP() {
         const user = document.getElementById('r-user').value.trim();
+        const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
-        const status = document.getElementById('status');
 
-        if (!user || !pass) { status.innerText = "ISI SEMUA!"; return; }
-        status.innerText = "REGISTERING...";
+        if(!user || !email || !pass) return notify("Lengkapi semua kolom!", "error");
+        
+        const snapshot = await db.ref('users/' + user).once('value');
+        if(snapshot.exists()) return notify("Username sudah digunakan!", "error");
 
-        const userRef = db.ref('users/' + user);
-        const snapshot = await userRef.once('value');
+        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+        tempUserData = { user, email, pass };
 
-        if (snapshot.exists()) {
-            status.innerText = "USERNAME SUDAH ADA!";
-        } else {
-            // Generate API Key baru ala WINZ XTR
-            const randomHex = Math.random().toString(16).slice(2, 14).toUpperCase();
-            const apiKey = "WINZ-" + randomHex;
+        notify("Sedang mengirim OTP...", "success");
 
-            await userRef.set({
-                username: user,
-                password: pass,
-                apikey: apiKey,
-                saldo: 0,
-                role: "user",
-                created_at: new Date().toLocaleString("id-ID")
-            });
-
-            await db.ref("api_keys/" + apiKey).set({ username: user });
-            status.style.color = "#00ff00";
-            status.innerText = "DAFTAR BERHASIL! SILAHKAN LOGIN.";
-            setTimeout(() => showTab('login'), 2000);
-        }
+        emailjs.send("SERVICE_ID", "TEMPLATE_ID", {
+            to_email: email,
+            otp: generatedOTP,
+            user_name: user,
+            from_name: "WinzStore Support"
+        }).then(() => {
+            showTab('otp');
+            document.getElementById('main-tabs').classList.add('hidden');
+            notify("OTP Berhasil Dikirim!", "success");
+        }, () => notify("Gagal kirim OTP!", "error"));
     }
 
-    // Fungsi Login
+    async function verifyAndSave() {
+        if(document.getElementById('v-otp').value !== generatedOTP) return notify("OTP Salah!", "error");
+
+        const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 14).toUpperCase();
+        const userData = {
+            username: tempUserData.user,
+            email: tempUserData.email,
+            password: tempUserData.pass,
+            apikey: apiKey,
+            saldo: 0,
+            role: "user",
+            created_at: new Date().toLocaleString()
+        };
+
+        await db.ref('users/' + tempUserData.user).set(userData);
+        await db.ref("api_keys/" + apiKey).set({ username: tempUserData.user });
+        
+        localStorage.setItem("winz_user", JSON.stringify(userData));
+        notify("Pendaftaran Berhasil!", "success");
+        setTimeout(() => window.location.href = "dashboard.html", 1500);
+    }
+
     function handleLogin() {
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
-        const status = document.getElementById('status');
-
-        if (!user || !pass) { status.innerText = "ISI SEMUA!"; return; }
-        status.innerText = "VERIFYING...";
 
         db.ref('users/' + user).once('value').then((snapshot) => {
             const data = snapshot.val();
             if (data && data.password === pass) {
-                status.style.color = "#00ff00";
-                status.innerText = "ACCESS GRANTED!";
                 localStorage.setItem("winz_user", JSON.stringify(data));
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 1500);
+                window.location.href = "dashboard.html";
             } else {
-                status.style.color = "#ff0000";
-                status.innerText = "WRONG USER/PASS!";
+                notify("Username/Password salah!", "error");
             }
         });
     }
