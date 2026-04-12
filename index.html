@@ -57,21 +57,8 @@
         }
         button:hover { background: var(--primary-hover); transform: translateY(-2px); }
         
-        .otp-info { background: #fff5f2; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary); }
-        .otp-info p { font-size: 12px; color: #444; margin: 0; line-height: 1.5; }
-        
-        .footer-support { margin-top: 30px; text-align: center; width: 100%; max-width: 420px; }
-        .support-card { 
-            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); 
-            padding: 15px; border-radius: 15px; border: 1px solid #ddd; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        }
-        .email-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 13px; }
-
         #status { margin-top: 15px; font-size: 13px; padding: 12px; border-radius: 10px; display: none; text-align: center; font-weight: 600; }
         .hidden { display: none; }
-        
-        /* Animasi Loading */
         .loader-screen { color: var(--primary); font-weight: 800; font-size: 20px; letter-spacing: 2px; }
     </style>
 </head>
@@ -93,7 +80,7 @@
     <div id="form-login">
         <div class="input-group">
             <label>Username</label>
-            <input type="text" id="l-user" placeholder="Masukkan username">
+            <input type="text" id="l-user" placeholder="Username lo">
         </div>
         <div class="input-group">
             <label>Password</label>
@@ -108,60 +95,45 @@
     <div id="form-reg" class="hidden">
         <div class="input-group">
             <label>Username</label>
-            <input type="text" id="r-user" placeholder="Contoh: winz_seller">
+            <input type="text" id="r-user" placeholder="Nama unik">
         </div>
         <div class="input-group">
-            <label>Email Aktif Pendaftar</label>
+            <label>Email Aktif</label>
             <input type="email" id="r-email" placeholder="email@gmail.com">
         </div>
         <div class="input-group">
-            <label>Buat Password</label>
+            <label>Password</label>
             <input type="password" id="r-pass" placeholder="Min. 6 karakter">
         </div>
         <button onclick="sendOTP()">Daftar Akun</button>
     </div>
 
     <div id="form-otp" class="hidden">
-        <div class="otp-info">
-            <p><strong>Verifikasi Email!</strong><br>Sistem kami telah mengirim kode OTP 6-digit ke email pendaftar. Silakan cek Inbox atau folder Spam.</p>
-        </div>
         <div class="input-group">
-            <label>Kode OTP</label>
+            <label>Masukkan Kode OTP</label>
             <input type="text" id="v-otp" maxlength="6" style="text-align: center; font-size: 28px; letter-spacing: 10px; font-weight: 800; color: var(--primary);" placeholder="000000">
         </div>
-        <button onclick="verifyAndSave()">Konfirmasi OTP</button>
-        <p onclick="showTab('reg')" style="font-size: 11px; color: #888; cursor: pointer; text-align: center; margin-top: 15px;">Salah email? <span style="color: var(--primary);">Ganti di sini</span></p>
+        <button onclick="verifyAndSave()">Verifikasi Akun</button>
     </div>
 
     <div id="status"></div>
 </div>
 
-<div class="footer-support hidden" id="support-footer">
-    <div class="support-card">
-        <div style="font-size: 11px; color: #666; line-height: 1.6;">
-            Mengalami kendala? Hubungi <b>Support Admin</b>:<br>
-            <a href="mailto:sportwinzzocialspam@gmail.com" class="email-link">sportwinzzocialspam@gmail.com</a>
-        </div>
-    </div>
-    <p style="font-size: 10px; color: #aaa; margin-top: 15px;">&copy; 2026 WinzStore Digital. All Rights Reserved.</p>
-</div>
-
 <script>
-    // --- KONFIGURASI DATABASE FIREBASE ---
+    // --- DATABASE UTAMA: WINZSHOP (DIPERBAIKI) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
-        databaseURL: "https://byrakha-dcfda-default-rtdb.firebaseio.com",
-        projectId: "byrakha-dcfda"
+        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "winzshop-e91e0"
     };
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // --- KONFIGURASI EMAILJS (PENTING!) ---
-    // GANTI TULISAN DI BAWAH INI DENGAN ID MILIK LO
-    const EMAILJS_PUBLIC_KEY = "USER_ID_LO"; // Masukkan Public Key
-    const EMAILJS_SERVICE_ID = "SERVICE_ID_LO"; // Masukkan Service ID
-    const EMAILJS_TEMPLATE_ID = "TEMPLATE_ID_LO"; // Masukkan Template ID
+    // Konfigurasi EmailJS lo
+    const EMAILJS_PUBLIC_KEY = "USER_ID_LO"; 
+    const EMAILJS_SERVICE_ID = "SERVICE_ID_LO"; 
+    const EMAILJS_TEMPLATE_ID = "TEMPLATE_ID_LO"; 
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -169,7 +141,6 @@
     let tempUserData = {};
 
     window.onload = function() {
-        // Cek Session Login
         const savedUser = localStorage.getItem("winz_user");
         if (savedUser) {
             window.location.href = "dashboard.html";
@@ -177,7 +148,6 @@
             setTimeout(() => {
                 document.getElementById('loader').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
-                document.getElementById('support-footer').classList.remove('hidden');
             }, 800);
         }
     };
@@ -188,7 +158,6 @@
         s.style.display = 'block';
         s.style.background = type === 'error' ? '#fff5f2' : '#f0fff4';
         s.style.color = type === 'error' ? '#ee4d2d' : '#2dce89';
-        s.style.border = `1px solid ${type === 'error' ? '#ffd8d2' : '#c6f6d5'}`;
     }
 
     function showTab(type) {
@@ -206,37 +175,36 @@
         const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
 
-        if(!user || !email || !pass) return notify("Lengkapi semua data, Win!", "error");
+        if(!user || !email || !pass) return notify("Lengkapi data pendaftaran!", "error");
         
-        notify("Validasi database...", "success");
+        notify("Cek database...", "success");
+        // Cek username di Database WinzShop
         const snap = await db.ref('users/' + user).once('value');
-        if(snap.exists()) return notify("Username sudah terdaftar!", "error");
+        if(snap.exists()) return notify("Username sudah dipake orang!", "error");
 
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
         tempUserData = { user, email, pass };
 
-        notify("Mengirim OTP ke pendaftar...", "success");
+        notify("Kirim OTP...", "success");
 
-        // Kirim via EmailJS
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-            to_email: email, // Email tujuan (si pendaftar)
+            to_email: email,
             otp: generatedOTP,
             user_name: user,
-            from_name: "WinzStore Security"
+            from_name: "WinzStore Support"
         }).then(() => {
             showTab('otp');
-            notify("OTP Terkirim ke " + email, "success");
+            notify("OTP terkirim ke email!", "success");
         }, (err) => {
-            notify("EmailJS Gagal! Cek konfigurasi ID lo.", "error");
-            console.error(err);
+            notify("EmailJS Gagal! Cek ID lo.", "error");
         });
     }
 
     async function verifyAndSave() {
         const inputOTP = document.getElementById('v-otp').value;
-        if(inputOTP !== generatedOTP) return notify("Kode OTP Salah!", "error");
+        if(inputOTP !== generatedOTP) return notify("OTP Salah!", "error");
 
-        notify("Mendaftarkan akun...", "success");
+        notify("Membuat akun...", "success");
         const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 14).toUpperCase();
 
         const dataFinal = {
@@ -246,48 +214,41 @@
             apikey: apiKey,
             saldo: 0,
             role: "user",
-            created_at: new Date().toLocaleString()
+            created_at: new Date().toLocaleString("id-ID")
         };
 
-        // Simpan ke Firebase Database
         try {
+            // Simpan ke WinzShop Database
             await db.ref('users/' + tempUserData.user).set(dataFinal);
             await db.ref("api_keys/" + apiKey).set({ username: tempUserData.user });
             
-            // Simpan ke Session Browser
             localStorage.setItem("winz_user", JSON.stringify(dataFinal));
-            
-            notify("Registrasi Berhasil!", "success");
-            setTimeout(() => window.location.href = "dashboard.html", 1200);
+            notify("Daftar Berhasil!", "success");
+            setTimeout(() => window.location.href = "dashboard.html", 1000);
         } catch (e) {
-            notify("Database error!", "error");
+            notify("Gagal simpan ke database!", "error");
         }
     }
 
     function handleLogin() {
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
-        const remember = document.getElementById('l-remember').checked;
 
-        if(!user || !pass) return notify("Isi username & password!", "error");
+        if(!user || !pass) return notify("Isi data login!", "error");
 
+        // Ambil data dari WinzShop Database
         db.ref('users/' + user).once('value').then((snap) => {
             const data = snap.val();
             if (data && data.password === pass) {
-                notify("Berhasil Masuk!", "success");
-                
-                // Simpan data login
+                notify("Login Berhasil!", "success");
                 localStorage.setItem("winz_user", JSON.stringify(data));
-                
-                // Jika tidak centang remember me, bisa diatur session berdurasi (opsional)
                 setTimeout(() => window.location.href = "dashboard.html", 1000);
             } else {
-                notify("Akun tidak ditemukan atau password salah!", "error");
+                notify("Username atau Password salah!", "error");
             }
         });
     }
 </script>
 </body>
 </html>
-
 
