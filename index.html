@@ -3,70 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinzStore - Solusi Digital Terpercaya</title>
+    <title>WinzStore - Marketplace Digital</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { --primary: #ee4d2d; --bg: #f5f5f5; --white: #ffffff; --text: #333; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--white); padding: 40px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        .logo { color: var(--primary); font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #777; margin-bottom: 30px; font-size: 14px; }
+        :root { 
+            --primary: #ee4d2d; 
+            --primary-hover: #d73211; 
+            --bg: #f5f5f5; 
+            --white: #ffffff;
+            --shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
         
-        .tabs { display: flex; margin-bottom: 25px; gap: 10px; }
-        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; border-bottom: 2px solid #ddd; font-weight: 600; color: #555; }
-        .tab.active { border-color: var(--primary); color: var(--primary); }
-
-        .input-group { margin-bottom: 15px; }
-        label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 14px; outline: none; }
-        input:focus { border-color: var(--primary); }
-
-        button { width: 100%; padding: 14px; background: var(--primary); border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { opacity: 0.9; }
+        * { box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            font-family: 'Inter', sans-serif; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
+        }
         
-        #status { margin-top: 20px; font-size: 13px; text-align: center; padding: 10px; border-radius: 4px; display: none; }
+        .container { 
+            background: var(--white); padding: 35px 30px; border-radius: 20px; 
+            box-shadow: var(--shadow); width: 100%; max-width: 420px; 
+            transition: 0.3s ease;
+        }
+        
+        .brand-box { margin-bottom: 30px; text-align: center; }
+        .brand-name { color: var(--primary); font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        .brand-name span { color: #333; }
+
+        .tabs { display: flex; margin-bottom: 30px; background: #f1f3f5; border-radius: 12px; padding: 5px; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 10px; font-weight: 600; color: #6c757d; text-align: center; font-size: 14px; transition: 0.3s; }
+        .tab.active { background: var(--white); color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        .input-group { margin-bottom: 18px; position: relative; }
+        label { font-size: 11px; font-weight: 800; color: #999; display: block; margin-bottom: 8px; text-transform: uppercase; }
+        input { 
+            width: 100%; padding: 14px 18px; border: 2px solid #f1f1f1; border-radius: 12px; 
+            font-size: 14px; background: #f8f9fa; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 8px rgba(238, 77, 45, 0.1); }
+
+        .remember-me { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: #666; cursor: pointer; }
+        .remember-me input { width: auto; }
+
+        button { 
+            width: 100%; padding: 16px; background: var(--primary); border: none; color: white; 
+            font-weight: 700; border-radius: 12px; cursor: pointer; font-size: 16px; transition: 0.3s; 
+        }
+        button:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        
+        .otp-info { background: #fff5f2; padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary); }
+        .otp-info p { font-size: 12px; color: #444; margin: 0; line-height: 1.5; }
+        
+        .footer-support { margin-top: 30px; text-align: center; width: 100%; max-width: 420px; }
+        .support-card { 
+            background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); 
+            padding: 15px; border-radius: 15px; border: 1px solid #ddd; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        }
+        .email-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 13px; }
+
+        #status { margin-top: 15px; font-size: 13px; padding: 12px; border-radius: 10px; display: none; text-align: center; font-weight: 600; }
         .hidden { display: none; }
+        
+        /* Animasi Loading */
+        .loader-screen { color: var(--primary); font-weight: 800; font-size: 20px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
 
-<div id="loader" style="color: var(--primary); font-weight: bold;">MEMERIKSA SESI...</div>
+<div id="loader" class="loader-screen">WINZ STORE</div>
 
 <div class="container hidden" id="main-content">
-    <div class="logo">WinzStore</div>
-    <div class="subtitle">Marketplace Akun & Layanan Digital</div>
+    <div class="brand-box">
+        <h1 class="brand-name">Winz<span>Store</span></h1>
+        <div style="font-size: 12px; color: #777; margin-top: 5px;">Digital Solution & SMM Marketplace</div>
+    </div>
 
     <div class="tabs" id="main-tabs">
-        <div id="tab-login" class="tab active" onclick="showTab('login')">Login</div>
+        <div id="tab-login" class="tab active" onclick="showTab('login')">Masuk</div>
         <div id="tab-reg" class="tab" onclick="showTab('reg')">Daftar</div>
     </div>
 
     <div id="form-login">
-        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Masukkan username"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="l-pass" placeholder="Masukkan password"></div>
-        <button onclick="handleLogin()">Masuk Sekarang</button>
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="l-user" placeholder="Masukkan username">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="l-pass" placeholder="••••••••">
+        </div>
+        <label class="remember-me">
+            <input type="checkbox" id="l-remember"> Ingat Saya
+        </label>
+        <button onclick="handleLogin()">Login Sekarang</button>
     </div>
 
     <div id="form-reg" class="hidden">
-        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Buat username"></div>
-        <div class="input-group"><label>Email</label><input type="email" id="r-email" placeholder="contoh@gmail.com"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Minimal 6 karakter"></div>
-        <button onclick="sendOTP()">Daftar & Kirim OTP</button>
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="r-user" placeholder="Contoh: winz_seller">
+        </div>
+        <div class="input-group">
+            <label>Email Aktif Pendaftar</label>
+            <input type="email" id="r-email" placeholder="email@gmail.com">
+        </div>
+        <div class="input-group">
+            <label>Buat Password</label>
+            <input type="password" id="r-pass" placeholder="Min. 6 karakter">
+        </div>
+        <button onclick="sendOTP()">Daftar Akun</button>
     </div>
 
     <div id="form-otp" class="hidden">
-        <p style="font-size: 13px; color: #666; text-align: center;">Kode OTP dikirim ke email Anda. Cek folder Inbox/Spam.</p>
-        <div class="input-group"><label>Masukkan Kode OTP</label><input type="text" id="v-otp" placeholder="6 Digit Kode"></div>
-        <button onclick="verifyAndSave()">Verifikasi Akun</button>
+        <div class="otp-info">
+            <p><strong>Verifikasi Email!</strong><br>Sistem kami telah mengirim kode OTP 6-digit ke email pendaftar. Silakan cek Inbox atau folder Spam.</p>
+        </div>
+        <div class="input-group">
+            <label>Kode OTP</label>
+            <input type="text" id="v-otp" maxlength="6" style="text-align: center; font-size: 28px; letter-spacing: 10px; font-weight: 800; color: var(--primary);" placeholder="000000">
+        </div>
+        <button onclick="verifyAndSave()">Konfirmasi OTP</button>
+        <p onclick="showTab('reg')" style="font-size: 11px; color: #888; cursor: pointer; text-align: center; margin-top: 15px;">Salah email? <span style="color: var(--primary);">Ganti di sini</span></p>
     </div>
 
     <div id="status"></div>
 </div>
 
+<div class="footer-support hidden" id="support-footer">
+    <div class="support-card">
+        <div style="font-size: 11px; color: #666; line-height: 1.6;">
+            Mengalami kendala? Hubungi <b>Support Admin</b>:<br>
+            <a href="mailto:sportwinzzocialspam@gmail.com" class="email-link">sportwinzzocialspam@gmail.com</a>
+        </div>
+    </div>
+    <p style="font-size: 10px; color: #aaa; margin-top: 15px;">&copy; 2026 WinzStore Digital. All Rights Reserved.</p>
+</div>
+
 <script>
+    // --- KONFIGURASI DATABASE FIREBASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://byrakha-dcfda-default-rtdb.firebaseio.com",
@@ -75,19 +156,29 @@
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    emailjs.init("USER_ID_EMAILJS_LO"); // <--- GANTI INI
+    
+    // --- KONFIGURASI EMAILJS (PENTING!) ---
+    // GANTI TULISAN DI BAWAH INI DENGAN ID MILIK LO
+    const EMAILJS_PUBLIC_KEY = "USER_ID_LO"; // Masukkan Public Key
+    const EMAILJS_SERVICE_ID = "SERVICE_ID_LO"; // Masukkan Service ID
+    const EMAILJS_TEMPLATE_ID = "TEMPLATE_ID_LO"; // Masukkan Template ID
+
+    emailjs.init(EMAILJS_PUBLIC_KEY);
 
     let generatedOTP = "";
     let tempUserData = {};
 
-    // --- CEK SESI OTOMATIS (Biar gak perlu login terus) ---
     window.onload = function() {
+        // Cek Session Login
         const savedUser = localStorage.getItem("winz_user");
         if (savedUser) {
             window.location.href = "dashboard.html";
         } else {
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                document.getElementById('support-footer').classList.remove('hidden');
+            }, 800);
         }
     };
 
@@ -95,8 +186,9 @@
         const s = document.getElementById('status');
         s.innerText = msg;
         s.style.display = 'block';
-        s.style.background = type === 'error' ? '#fdecea' : '#eafaf1';
-        s.style.color = type === 'error' ? '#ea4335' : '#27ae60';
+        s.style.background = type === 'error' ? '#fff5f2' : '#f0fff4';
+        s.style.color = type === 'error' ? '#ee4d2d' : '#2dce89';
+        s.style.border = `1px solid ${type === 'error' ? '#ffd8d2' : '#c6f6d5'}`;
     }
 
     function showTab(type) {
@@ -106,6 +198,7 @@
         document.getElementById('main-tabs').classList.toggle('hidden', type === 'otp');
         document.getElementById('tab-login').classList.toggle('active', type === 'login');
         document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
+        document.getElementById('status').style.display = 'none';
     }
 
     async function sendOTP() {
@@ -113,33 +206,40 @@
         const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
 
-        if(!user || !email || !pass) return notify("Lengkapi semua kolom!", "error");
+        if(!user || !email || !pass) return notify("Lengkapi semua data, Win!", "error");
         
-        const snapshot = await db.ref('users/' + user).once('value');
-        if(snapshot.exists()) return notify("Username sudah digunakan!", "error");
+        notify("Validasi database...", "success");
+        const snap = await db.ref('users/' + user).once('value');
+        if(snap.exists()) return notify("Username sudah terdaftar!", "error");
 
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
         tempUserData = { user, email, pass };
 
-        notify("Sedang mengirim OTP...", "success");
+        notify("Mengirim OTP ke pendaftar...", "success");
 
-        emailjs.send("SERVICE_ID", "TEMPLATE_ID", {
-            to_email: email,
+        // Kirim via EmailJS
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            to_email: email, // Email tujuan (si pendaftar)
             otp: generatedOTP,
             user_name: user,
-            from_name: "WinzStore Support"
+            from_name: "WinzStore Security"
         }).then(() => {
             showTab('otp');
-            document.getElementById('main-tabs').classList.add('hidden');
-            notify("OTP Berhasil Dikirim!", "success");
-        }, () => notify("Gagal kirim OTP!", "error"));
+            notify("OTP Terkirim ke " + email, "success");
+        }, (err) => {
+            notify("EmailJS Gagal! Cek konfigurasi ID lo.", "error");
+            console.error(err);
+        });
     }
 
     async function verifyAndSave() {
-        if(document.getElementById('v-otp').value !== generatedOTP) return notify("OTP Salah!", "error");
+        const inputOTP = document.getElementById('v-otp').value;
+        if(inputOTP !== generatedOTP) return notify("Kode OTP Salah!", "error");
 
+        notify("Mendaftarkan akun...", "success");
         const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 14).toUpperCase();
-        const userData = {
+
+        const dataFinal = {
             username: tempUserData.user,
             email: tempUserData.email,
             password: tempUserData.pass,
@@ -149,29 +249,45 @@
             created_at: new Date().toLocaleString()
         };
 
-        await db.ref('users/' + tempUserData.user).set(userData);
-        await db.ref("api_keys/" + apiKey).set({ username: tempUserData.user });
-        
-        localStorage.setItem("winz_user", JSON.stringify(userData));
-        notify("Pendaftaran Berhasil!", "success");
-        setTimeout(() => window.location.href = "dashboard.html", 1500);
+        // Simpan ke Firebase Database
+        try {
+            await db.ref('users/' + tempUserData.user).set(dataFinal);
+            await db.ref("api_keys/" + apiKey).set({ username: tempUserData.user });
+            
+            // Simpan ke Session Browser
+            localStorage.setItem("winz_user", JSON.stringify(dataFinal));
+            
+            notify("Registrasi Berhasil!", "success");
+            setTimeout(() => window.location.href = "dashboard.html", 1200);
+        } catch (e) {
+            notify("Database error!", "error");
+        }
     }
 
     function handleLogin() {
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
+        const remember = document.getElementById('l-remember').checked;
 
-        db.ref('users/' + user).once('value').then((snapshot) => {
-            const data = snapshot.val();
+        if(!user || !pass) return notify("Isi username & password!", "error");
+
+        db.ref('users/' + user).once('value').then((snap) => {
+            const data = snap.val();
             if (data && data.password === pass) {
+                notify("Berhasil Masuk!", "success");
+                
+                // Simpan data login
                 localStorage.setItem("winz_user", JSON.stringify(data));
-                window.location.href = "dashboard.html";
+                
+                // Jika tidak centang remember me, bisa diatur session berdurasi (opsional)
+                setTimeout(() => window.location.href = "dashboard.html", 1000);
             } else {
-                notify("Username/Password salah!", "error");
+                notify("Akun tidak ditemukan atau password salah!", "error");
             }
         });
     }
 </script>
 </body>
 </html>
+
 
