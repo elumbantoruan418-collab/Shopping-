@@ -115,7 +115,7 @@
 </div>
 
 <script>
-    // --- CONFIGURATION (GANTI DENGAN PUNYA LO) ---
+    // --- KONFIGURASI DATABASE ---
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -125,9 +125,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    const EMAILJS_PUBLIC_KEY = "GANTI_USER_ID_LO"; 
-    const EMAILJS_SERVICE_ID = "GANTI_SERVICE_ID_LO"; 
-    const EMAILJS_TEMPLATE_ID = "GANTI_TEMPLATE_ID_LO"; 
+    // --- WAJIB DIISI BIAR OTP JALAN ---
+    const EMAILJS_PUBLIC_KEY = "MASUKKAN_PUBLIC_KEY_LO"; 
+    const EMAILJS_SERVICE_ID = "MASUKKAN_SERVICE_ID_LO"; 
+    const EMAILJS_TEMPLATE_ID = "MASUKKAN_TEMPLATE_ID_LO"; 
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -137,7 +138,6 @@
     window.onload = function() {
         const savedUser = localStorage.getItem("winz_user");
         if (savedUser) {
-            // Jika sudah login, langsung ke dashboard
             const data = JSON.parse(savedUser);
             window.location.href = data.role === "admin" ? "admin_dashboard.html" : "dashboard.html";
         } else {
@@ -174,12 +174,11 @@
         if(!user || !email || !pass) return notify("Lengkapi data pendaftaran!", "error");
         
         notify("Mengecek username...", "success");
-        // Cek apakah username sudah ada di folder users atau admins
         const userSnap = await db.ref('users/' + user).once('value');
         const adminSnap = await db.ref('admins/' + user).once('value');
 
         if(userSnap.exists() || adminSnap.exists()) {
-            return notify("Username sudah digunakan!", "error");
+            return notify("Username sudah dipake!", "error");
         }
 
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
@@ -191,20 +190,20 @@
             to_email: email,
             otp: generatedOTP,
             user_name: user,
-            from_name: "WinzStore Support"
+            from_name: "WinzStore Official"
         }).then(() => {
             showTab('otp');
-            notify("OTP terkirim ke email!", "success");
+            notify("OTP terkirim ke email lo!", "success");
         }, (err) => {
-            notify("Gagal kirim email! Cek Config EmailJS.", "error");
+            notify("Gagal kirim email! Cek Config EmailJS lo.", "error");
         });
     }
 
     async function verifyAndSave() {
         const inputOTP = document.getElementById('v-otp').value.trim();
-        if(inputOTP !== generatedOTP) return notify("Kode OTP Salah!", "error");
+        if(inputOTP !== generatedOTP) return notify("OTP Salah, Cek Email!", "error");
 
-        notify("Mendaftarkan akun...", "success");
+        notify("Membuat akun...", "success");
         const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 18).toUpperCase();
 
         const dataFinal = {
@@ -225,7 +224,7 @@
             notify("Pendaftaran Berhasil!", "success");
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } catch (e) {
-            notify("Error Database!", "error");
+            notify("Gagal simpan ke database!", "error");
         }
     }
 
@@ -233,14 +232,13 @@
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
 
-        if(!user || !pass) return notify("Isi username & password!", "error");
+        if(!user || !pass) return notify("Lengkapi data login!", "error");
 
         notify("Memverifikasi...", "success");
 
-        // 1. Cek folder Admins
+        // Cek Admin
         const adminSnap = await db.ref('admins/' + user).once('value');
         const adminData = adminSnap.val();
-
         if (adminData && adminData.password === pass) {
             notify("Login Admin Sukses!", "success");
             adminData.role = "admin";
@@ -249,21 +247,21 @@
             return;
         }
 
-        // 2. Cek folder Users
+        // Cek User
         const userSnap = await db.ref('users/' + user).once('value');
         const userData = userSnap.val();
-
         if (userData && userData.password === pass) {
             notify("Login Berhasil!", "success");
             userData.role = "user";
             localStorage.setItem("winz_user", JSON.stringify(userData));
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } else {
-            notify("Akun tidak ditemukan atau password salah!", "error");
+            notify("Username atau Password salah!", "error");
         }
     }
 </script>
 </body>
-</html>
+            </html>
+
 
 
