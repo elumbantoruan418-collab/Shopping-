@@ -125,10 +125,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // --- WAJIB DIISI BIAR OTP JALAN ---
-    const EMAILJS_PUBLIC_KEY = "MASUKKAN_PUBLIC_KEY_LO"; 
-    const EMAILJS_SERVICE_ID = "MASUKKAN_SERVICE_ID_LO"; 
-    const EMAILJS_TEMPLATE_ID = "MASUKKAN_TEMPLATE_ID_LO"; 
+    // --- KREDENSIAL EMAILJS ---
+    const EMAILJS_PUBLIC_KEY = "n4j54uB0C0oZ3o-2M"; 
+    const EMAILJS_SERVICE_ID = "service_vj82qpa"; 
+    const EMAILJS_TEMPLATE_ID = "template_j89781k"; 
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -186,10 +186,14 @@
 
         notify("Mengirim OTP...", "success");
 
+        // --- KATA-KATA CUSTOM WINZ ---
+        const pesanWinz = `Hai kk "${user}" mau daftar, terima kasih telah daftar akun di winz.shop, layanan kami akan memberikan yang terbaik 🙏🙏 semoga hari kk menyenangkan, semangat trus ya kk`;
+
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
             to_email: email,
-            otp: generatedOTP,
             user_name: user,
+            pesan_pembuka: pesanWinz, // Masuk ke {{pesan_pembuka}} di EmailJS
+            otp: generatedOTP,        // Masuk ke {{otp}} di EmailJS
             from_name: "WinzStore Official"
         }).then(() => {
             showTab('otp');
@@ -236,18 +240,16 @@
 
         notify("Memverifikasi...", "success");
 
-        // Cek Admin
         const adminSnap = await db.ref('admins/' + user).once('value');
         const adminData = adminSnap.val();
         if (adminData && adminData.password === pass) {
             notify("Login Admin Sukses!", "success");
             adminData.role = "admin";
             localStorage.setItem("winz_user", JSON.stringify(adminData));
-            setTimeout(() => window.location.href = "admin_dashboard.html", 1000);
+            setTimeout(() => window.location.href = "admin.html", 1000);
             return;
         }
 
-        // Cek User
         const userSnap = await db.ref('users/' + user).once('value');
         const userData = userSnap.val();
         if (userData && userData.password === pass) {
@@ -261,7 +263,8 @@
     }
 </script>
 </body>
-            </html>
+</html>
+
 
 
 
