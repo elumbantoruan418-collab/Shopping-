@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinzStore - Marketplace Digital</title>
+    <title>WinzStore - Digital Marketplace</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -48,9 +48,6 @@
         }
         input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 8px rgba(238, 77, 45, 0.1); }
 
-        .remember-me { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 13px; color: #666; cursor: pointer; }
-        .remember-me input { width: auto; }
-
         button { 
             width: 100%; padding: 16px; background: var(--primary); border: none; color: white; 
             font-weight: 700; border-radius: 12px; cursor: pointer; font-size: 16px; transition: 0.3s; 
@@ -86,9 +83,6 @@
             <label>Password</label>
             <input type="password" id="l-pass" placeholder="••••••••">
         </div>
-        <label class="remember-me">
-            <input type="checkbox" id="l-remember"> Ingat Saya
-        </label>
         <button onclick="handleLogin()">Login Sekarang</button>
     </div>
 
@@ -105,7 +99,7 @@
             <label>Password</label>
             <input type="password" id="r-pass" placeholder="Min. 6 karakter">
         </div>
-        <button onclick="sendOTP()">Daftar Akun</button>
+        <button onclick="sendOTP()">Kirim Kode OTP</button>
     </div>
 
     <div id="form-otp" class="hidden">
@@ -114,13 +108,14 @@
             <input type="text" id="v-otp" maxlength="6" style="text-align: center; font-size: 28px; letter-spacing: 10px; font-weight: 800; color: var(--primary);" placeholder="000000">
         </div>
         <button onclick="verifyAndSave()">Verifikasi Akun</button>
+        <p style="text-align: center; font-size: 12px; color: #777; margin-top: 10px; cursor: pointer;" onclick="showTab('reg')">Batal / Ganti Email</p>
     </div>
 
     <div id="status"></div>
 </div>
 
 <script>
-    // --- DATABASE UTAMA: WINZSHOP (DIPERBAIKI) ---
+    // --- CONFIGURATION (GANTI DENGAN PUNYA LO) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -130,10 +125,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // Konfigurasi EmailJS lo
-    const EMAILJS_PUBLIC_KEY = "USER_ID_LO"; 
-    const EMAILJS_SERVICE_ID = "SERVICE_ID_LO"; 
-    const EMAILJS_TEMPLATE_ID = "TEMPLATE_ID_LO"; 
+    const EMAILJS_PUBLIC_KEY = "GANTI_USER_ID_LO"; 
+    const EMAILJS_SERVICE_ID = "GANTI_SERVICE_ID_LO"; 
+    const EMAILJS_TEMPLATE_ID = "GANTI_TEMPLATE_ID_LO"; 
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -143,7 +137,9 @@
     window.onload = function() {
         const savedUser = localStorage.getItem("winz_user");
         if (savedUser) {
-            window.location.href = "dashboard.html";
+            // Jika sudah login, langsung ke dashboard
+            const data = JSON.parse(savedUser);
+            window.location.href = data.role === "admin" ? "admin_dashboard.html" : "dashboard.html";
         } else {
             setTimeout(() => {
                 document.getElementById('loader').classList.add('hidden');
@@ -163,7 +159,7 @@
     function showTab(type) {
         document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
         document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
-        document.getElementById('form-otp').classList.add('hidden');
+        document.getElementById('form-otp').classList.toggle('hidden', type !== 'otp');
         document.getElementById('main-tabs').classList.toggle('hidden', type === 'otp');
         document.getElementById('tab-login').classList.toggle('active', type === 'login');
         document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
@@ -177,15 +173,19 @@
 
         if(!user || !email || !pass) return notify("Lengkapi data pendaftaran!", "error");
         
-        notify("Cek database...", "success");
-        // Cek username di Database WinzShop
-        const snap = await db.ref('users/' + user).once('value');
-        if(snap.exists()) return notify("Username sudah dipake orang!", "error");
+        notify("Mengecek username...", "success");
+        // Cek apakah username sudah ada di folder users atau admins
+        const userSnap = await db.ref('users/' + user).once('value');
+        const adminSnap = await db.ref('admins/' + user).once('value');
+
+        if(userSnap.exists() || adminSnap.exists()) {
+            return notify("Username sudah digunakan!", "error");
+        }
 
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
         tempUserData = { user, email, pass };
 
-        notify("Kirim OTP...", "success");
+        notify("Mengirim OTP...", "success");
 
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
             to_email: email,
@@ -196,16 +196,16 @@
             showTab('otp');
             notify("OTP terkirim ke email!", "success");
         }, (err) => {
-            notify("EmailJS Gagal! Cek ID lo.", "error");
+            notify("Gagal kirim email! Cek Config EmailJS.", "error");
         });
     }
 
     async function verifyAndSave() {
-        const inputOTP = document.getElementById('v-otp').value;
-        if(inputOTP !== generatedOTP) return notify("OTP Salah!", "error");
+        const inputOTP = document.getElementById('v-otp').value.trim();
+        if(inputOTP !== generatedOTP) return notify("Kode OTP Salah!", "error");
 
-        notify("Membuat akun...", "success");
-        const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 14).toUpperCase();
+        notify("Mendaftarkan akun...", "success");
+        const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 18).toUpperCase();
 
         const dataFinal = {
             username: tempUserData.user,
@@ -218,37 +218,52 @@
         };
 
         try {
-            // Simpan ke WinzShop Database
             await db.ref('users/' + tempUserData.user).set(dataFinal);
             await db.ref("api_keys/" + apiKey).set({ username: tempUserData.user });
             
             localStorage.setItem("winz_user", JSON.stringify(dataFinal));
-            notify("Daftar Berhasil!", "success");
+            notify("Pendaftaran Berhasil!", "success");
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } catch (e) {
-            notify("Gagal simpan ke database!", "error");
+            notify("Error Database!", "error");
         }
     }
 
-    function handleLogin() {
+    async function handleLogin() {
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
 
-        if(!user || !pass) return notify("Isi data login!", "error");
+        if(!user || !pass) return notify("Isi username & password!", "error");
 
-        // Ambil data dari WinzShop Database
-        db.ref('users/' + user).once('value').then((snap) => {
-            const data = snap.val();
-            if (data && data.password === pass) {
-                notify("Login Berhasil!", "success");
-                localStorage.setItem("winz_user", JSON.stringify(data));
-                setTimeout(() => window.location.href = "dashboard.html", 1000);
-            } else {
-                notify("Username atau Password salah!", "error");
-            }
-        });
+        notify("Memverifikasi...", "success");
+
+        // 1. Cek folder Admins
+        const adminSnap = await db.ref('admins/' + user).once('value');
+        const adminData = adminSnap.val();
+
+        if (adminData && adminData.password === pass) {
+            notify("Login Admin Sukses!", "success");
+            adminData.role = "admin";
+            localStorage.setItem("winz_user", JSON.stringify(adminData));
+            setTimeout(() => window.location.href = "admin_dashboard.html", 1000);
+            return;
+        }
+
+        // 2. Cek folder Users
+        const userSnap = await db.ref('users/' + user).once('value');
+        const userData = userSnap.val();
+
+        if (userData && userData.password === pass) {
+            notify("Login Berhasil!", "success");
+            userData.role = "user";
+            localStorage.setItem("winz_user", JSON.stringify(userData));
+            setTimeout(() => window.location.href = "dashboard.html", 1000);
+        } else {
+            notify("Akun tidak ditemukan atau password salah!", "error");
+        }
     }
 </script>
 </body>
 </html>
+
 
