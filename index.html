@@ -115,7 +115,7 @@
 </div>
 
 <script>
-    // --- KONFIGURASI DATABASE ---
+    // Konfigurasi Firebase lo Win
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -125,9 +125,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // --- KREDENSIAL EMAILJS ---
+    // Sesuaikan Service ID sama yang ada di gambar dashboard lo ya!
     const EMAILJS_PUBLIC_KEY = "n4j54uB0C0oZ3o-2M"; 
-    const EMAILJS_SERVICE_ID = "service_vj82qpa"; 
+    const EMAILJS_SERVICE_ID = "service_45nitce"; // Gue update sesuai video lo tadi
     const EMAILJS_TEMPLATE_ID = "template_j89781k"; 
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
@@ -139,7 +139,7 @@
         const savedUser = localStorage.getItem("winz_user");
         if (savedUser) {
             const data = JSON.parse(savedUser);
-            window.location.href = data.role === "admin" ? "admin_dashboard.html" : "dashboard.html";
+            window.location.href = data.role === "admin" ? "admin.html" : "dashboard.html";
         } else {
             setTimeout(() => {
                 document.getElementById('loader').classList.add('hidden');
@@ -178,36 +178,36 @@
         const adminSnap = await db.ref('admins/' + user).once('value');
 
         if(userSnap.exists() || adminSnap.exists()) {
-            return notify("Username sudah dipake!", "error");
+            return notify("Username udah kepake, cari yang lain!", "error");
         }
 
         generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
         tempUserData = { user, email, pass };
 
-        notify("Mengirim OTP...", "success");
+        notify("Mengirim OTP ke email lo...", "success");
 
-        // --- KATA-KATA CUSTOM WINZ ---
         const pesanWinz = `Hai kk "${user}" mau daftar, terima kasih telah daftar akun di winz.shop, layanan kami akan memberikan yang terbaik 🙏🙏 semoga hari kk menyenangkan, semangat trus ya kk`;
 
         emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
             to_email: email,
             user_name: user,
-            pesan_pembuka: pesanWinz, // Masuk ke {{pesan_pembuka}} di EmailJS
-            otp: generatedOTP,        // Masuk ke {{otp}} di EmailJS
+            pesan_pembuka: pesanWinz,
+            otp: generatedOTP,
             from_name: "WinzStore Official"
         }).then(() => {
             showTab('otp');
-            notify("OTP terkirim ke email lo!", "success");
+            notify("OTP meluncur! Cek email lo.", "success");
         }, (err) => {
-            notify("Gagal kirim email! Cek Config EmailJS lo.", "error");
+            console.error(err);
+            notify("Gagal kirim OTP! Cek EmailJS lo.", "error");
         });
     }
 
     async function verifyAndSave() {
         const inputOTP = document.getElementById('v-otp').value.trim();
-        if(inputOTP !== generatedOTP) return notify("OTP Salah, Cek Email!", "error");
+        if(inputOTP !== generatedOTP) return notify("OTP Salah, cek lagi emailnya!", "error");
 
-        notify("Membuat akun...", "success");
+        notify("Akun lo lagi dibuat...", "success");
         const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 18).toUpperCase();
 
         const dataFinal = {
@@ -228,7 +228,7 @@
             notify("Pendaftaran Berhasil!", "success");
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } catch (e) {
-            notify("Gagal simpan ke database!", "error");
+            notify("Waduh, gagal simpan ke database!", "error");
         }
     }
 
@@ -236,14 +236,14 @@
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
 
-        if(!user || !pass) return notify("Lengkapi data login!", "error");
+        if(!user || !pass) return notify("Isi dulu username & passwordnya!", "error");
 
-        notify("Memverifikasi...", "success");
+        notify("Lagi ngecek data...", "success");
 
         const adminSnap = await db.ref('admins/' + user).once('value');
         const adminData = adminSnap.val();
         if (adminData && adminData.password === pass) {
-            notify("Login Admin Sukses!", "success");
+            notify("Halo Admin! Login Sukses.", "success");
             adminData.role = "admin";
             localStorage.setItem("winz_user", JSON.stringify(adminData));
             setTimeout(() => window.location.href = "admin.html", 1000);
@@ -253,18 +253,14 @@
         const userSnap = await db.ref('users/' + user).once('value');
         const userData = userSnap.val();
         if (userData && userData.password === pass) {
-            notify("Login Berhasil!", "success");
+            notify("Mantap, login berhasil!", "success");
             userData.role = "user";
             localStorage.setItem("winz_user", JSON.stringify(userData));
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } else {
-            notify("Username atau Password salah!", "error");
+            notify("Username/Password lo salah!", "error");
         }
     }
 </script>
 </body>
 </html>
-
-
-
-
