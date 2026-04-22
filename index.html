@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinzStore - Premium Marketplace</title>
+    <title>WinzStore - Premium</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -11,66 +11,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
     <style>
-        :root { 
-            --primary: #ee4d2d; 
-            --primary-dark: #d73211; 
-            --bg: #0f172a; 
-            --card-bg: rgba(255, 255, 255, 0.95);
-        }
-        
+        :root { --primary: #ee4d2d; --bg: #0f172a; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
-        body { 
-            background: radial-gradient(circle at top right, #334155, #0f172a);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; padding: 20px; color: #1e293b;
-        }
-        
-        .container { 
-            background: var(--card-bg); padding: 40px 30px; border-radius: 24px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 400px; 
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
-        }
-        
+        body { background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; color: #1e293b; }
+        .container { background: white; padding: 40px 30px; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); width: 100%; max-width: 400px; }
         .brand-box { text-align: center; margin-bottom: 30px; }
-        .brand-name { font-size: 34px; font-weight: 800; margin: 0; letter-spacing: -1.5px; color: var(--primary); }
-        .brand-name span { color: #0f172a; }
-
+        .brand-name { font-size: 34px; font-weight: 800; color: var(--primary); margin: 0; }
         .tabs { display: flex; background: #f1f5f9; border-radius: 14px; padding: 4px; margin-bottom: 25px; }
-        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 14px; text-align: center; transition: 0.3s; color: #64748b; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 14px; text-align: center; color: #64748b; }
         .tab.active { background: white; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-
         .input-group { margin-bottom: 20px; }
-        label { font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px; margin-left: 4px; }
-        input { 
-            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px; 
-            font-size: 15px; background: white; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(238, 77, 45, 0.1); }
-
-        button { 
-            width: 100%; padding: 16px; background: var(--primary); border: none; color: white; 
-            font-weight: 800; border-radius: 14px; cursor: pointer; font-size: 16px; transition: 0.3s;
-            box-shadow: 0 10px 15px -3px rgba(238, 77, 45, 0.3);
-        }
-        button:hover { background: var(--primary-dark); transform: translateY(-2px); }
-        button:active { transform: translateY(0); }
-        
+        label { font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px; }
+        input { width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px; font-size: 15px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 16px; background: var(--primary); border: none; color: white; font-weight: 800; border-radius: 14px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #d73211; transform: translateY(-2px); }
         #status { margin-top: 20px; font-size: 13px; padding: 14px; border-radius: 12px; display: none; text-align: center; font-weight: 700; }
         .hidden { display: none; }
-        
-        .otp-input { text-align: center; font-size: 32px !important; letter-spacing: 8px; font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loader" style="color: white; font-weight: 800; font-size: 24px; letter-spacing: 4px;">WINZ STORE</div>
-
-<div class="container hidden" id="main-content">
-    <div class="brand-box">
-        <h1 class="brand-name">Winz<span>Store</span></h1>
-        <div style="font-size: 13px; color: #64748b; margin-top: 5px; font-weight: 600;">Digital Solution Marketplace</div>
-    </div>
+<div class="container" id="main-content">
+    <div class="brand-box"><h1 class="brand-name">WinzStore</h1></div>
 
     <div class="tabs" id="main-tabs">
         <div id="tab-login" class="tab active" onclick="showTab('login')">Masuk</div>
@@ -78,62 +41,49 @@
     </div>
 
     <div id="form-login">
-        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Username kamu"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••"></div>
-        <button onclick="handleLogin()">Masuk Sekarang</button>
+        <div class="input-group"><label>Username</label><input type="text" id="l-user"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="l-pass"></div>
+        <button onclick="handleLogin()">Masuk</button>
     </div>
 
     <div id="form-reg" class="hidden">
-        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Username unik"></div>
-        <div class="input-group"><label>Email Aktif</label><input type="email" id="r-email" placeholder="contoh@gmail.com"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 karakter"></div>
-        <button onclick="sendOTP()">Kirim Kode OTP</button>
+        <div class="input-group"><label>Username</label><input type="text" id="r-user"></div>
+        <div class="input-group"><label>Email</label><input type="email" id="r-email"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="r-pass"></div>
+        <button onclick="sendOTP()">Kirim OTP</button>
     </div>
 
     <div id="form-otp" class="hidden">
-        <div class="input-group">
-            <label style="text-align: center;">Verifikasi Kode OTP</label>
-            <input type="text" id="v-otp" maxlength="6" class="otp-input" placeholder="000000">
-        </div>
-        <button onclick="verifyAndSave()">Verifikasi & Daftar</button>
-        <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 15px; cursor: pointer; font-weight: 700;" onclick="showTab('reg')">Kembali</p>
+        <div class="input-group"><label>Kode OTP</label><input type="text" id="v-otp" maxlength="6" style="text-align:center; font-size:24px;"></div>
+        <button onclick="verifyAndSave()">Verifikasi</button>
     </div>
 
     <div id="status"></div>
 </div>
 
 <script>
-    // 1. Firebase Configuration
+    // --- FIX FIREBASE CONFIG ---
+    // Cek lagi di Firebase Console lo bagian 'Realtime Database', 
+    // pastikan link-nya persis kayak di bawah (tanpa spasi/karakter aneh)
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
-        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
+        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app/",
         projectId: "winzshop-e91e0"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
-    // 2. EmailJS Configuration
-    const PUB_KEY = "n4j54uB0C0oZ3o-2M"; 
-    const SERV_ID = "service_45nitce"; 
-    const TEMP_ID = "template_j89781k"; 
 
-    // Inisialisasi EmailJS yang benar
+    // --- EMAILJS ---
+    const PUB_KEY = "n4j54uB0C0oZ3o-2M";
     emailjs.init(PUB_KEY);
 
     let generatedOTP = "";
     let tempUserData = {};
 
-    window.onload = () => {
-        setTimeout(() => {
-            document.getElementById('loader').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
-        }, 800);
-    };
-
     function notify(msg, type) {
         const s = document.getElementById('status');
-        s.innerText = msg;
-        s.style.display = 'block';
+        s.innerText = msg; s.style.display = 'block';
         s.style.background = type === 'error' ? '#fee2e2' : '#dcfce7';
         s.style.color = type === 'error' ? '#dc2626' : '#16a34a';
     }
@@ -143,9 +93,6 @@
         document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
         document.getElementById('form-otp').classList.toggle('hidden', type !== 'otp');
         document.getElementById('main-tabs').classList.toggle('hidden', type === 'otp');
-        document.getElementById('tab-login').classList.toggle('active', type === 'login');
-        document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
-        document.getElementById('status').style.display = 'none';
     }
 
     async function sendOTP() {
@@ -153,72 +100,61 @@
         const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
 
-        if(!user || !email || !pass) return notify("Lengkapi semua data!", "error");
-        
-        notify("Sedang mengecek data...", "success");
-        const userSnap = await db.ref('users/' + user).once('value');
-        if(userSnap.exists()) return notify("Username sudah digunakan!", "error");
+        if(!user || !email || !pass) return notify("Lengkapi data!", "error");
 
-        generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-        tempUserData = { user, email, pass };
+        try {
+            notify("Ngecek database...", "success");
+            // Cek username di database
+            const snap = await db.ref('users/' + user).once('value');
+            if(snap.exists()) return notify("Username sudah ada!", "error");
 
-        notify("Sedang mengirim OTP...", "success");
+            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+            tempUserData = { user, email, pass };
 
-        // Pesan Sesuai Request Lo Win
-        const pesanWinz = `Hai kk "${user}" mau daftar, terima kasih telah daftar akun di winz.shop, layanan kami akan memberikan yang terbaik 🙏🙏 semoga hari kk menyenangkan, semangat trus ya kk`;
+            notify("Ngirim email...", "success");
+            const pesan = `Hai kk "${user}" mau daftar, terima kasih telah daftar akun di winz.shop, layanan kami akan memberikan yang terbaik 🙏🙏`;
 
-        const emailParams = {
-            to_email: email,
-            user_name: user,
-            otp: generatedOTP,
-            pesan_pembuka: pesanWinz,
-            from_name: "WinzStore Official"
-        };
+            await emailjs.send("service_45nitce", "template_j89781k", {
+                to_email: email,
+                user_name: user,
+                otp: generatedOTP,
+                pesan_pembuka: pesan,
+                from_name: "WinzStore Official"
+            }, PUB_KEY);
 
-        emailjs.send(SERV_ID, TEMP_ID, emailParams, PUB_KEY)
-        .then(() => {
             showTab('otp');
-            notify("Kode OTP terkirim ke email!", "success");
-        })
-        .catch((err) => {
+            notify("OTP Terkirim!", "success");
+        } catch (err) {
             console.error(err);
-            notify("Gagal kirim email: " + (err.text || "Cek kuota EmailJS"), "error");
-        });
+            notify("Error: " + err.message, "error");
+        }
     }
 
     async function verifyAndSave() {
-        if(document.getElementById('v-otp').value.trim() !== generatedOTP) return notify("Kode OTP salah!", "error");
-
-        notify("Mendaftarkan akun...", "success");
-        const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 10).toUpperCase();
-
-        const dataFinal = {
-            username: tempUserData.user,
-            email: tempUserData.email,
-            password: tempUserData.pass,
-            apikey: apiKey,
-            saldo: 0,
+        if(document.getElementById('v-otp').value.trim() !== generatedOTP) return notify("OTP Salah!", "error");
+        
+        const data = { 
+            username: tempUserData.user, 
+            email: tempUserData.email, 
+            password: tempUserData.pass, 
+            saldo: 0, 
             role: "user",
             created_at: new Date().toLocaleString("id-ID")
         };
 
         try {
-            await db.ref('users/' + tempUserData.user).set(dataFinal);
-            localStorage.setItem("winz_user", JSON.stringify(dataFinal));
-            notify("Berhasil Terdaftar!", "success");
+            await db.ref('users/' + tempUserData.user).set(data);
+            localStorage.setItem("winz_user", JSON.stringify(data));
+            notify("Berhasil!", "success");
             setTimeout(() => window.location.href = "dashboard.html", 1000);
         } catch (e) {
-            notify("Gagal menyimpan data!", "error");
+            notify("Gagal simpan!", "error");
         }
     }
 
     async function handleLogin() {
         const user = document.getElementById('l-user').value.trim();
         const pass = document.getElementById('l-pass').value.trim();
-
-        if(!user || !pass) return notify("Isi username & password!", "error");
-
-        notify("Memverifikasi...", "success");
         const snap = await db.ref('users/' + user).once('value');
         const data = snap.val();
 
@@ -226,10 +162,9 @@
             localStorage.setItem("winz_user", JSON.stringify(data));
             window.location.href = "dashboard.html";
         } else {
-            notify("Username atau password salah!", "error");
+            notify("Salah login!", "error");
         }
     }
 </script>
 </body>
 </html>
-
