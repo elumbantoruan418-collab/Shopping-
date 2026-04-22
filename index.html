@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WinzStore - Premium Marketplace</title>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
@@ -15,21 +16,20 @@
             --primary: #ee4d2d; 
             --primary-dark: #d73211; 
             --bg: #0f172a; 
-            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: #ffffff;
         }
         
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; }
         
         body { 
             background: radial-gradient(circle at top right, #334155, #0f172a);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; padding: 20px; color: #1e293b;
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
         }
         
         .container { 
             background: var(--card-bg); padding: 40px 30px; border-radius: 24px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 400px; 
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 400px;
         }
         
         .brand-box { text-align: center; margin-bottom: 30px; }
@@ -37,39 +37,36 @@
         .brand-name span { color: #0f172a; }
 
         .tabs { display: flex; background: #f1f5f9; border-radius: 14px; padding: 4px; margin-bottom: 25px; }
-        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 14px; text-align: center; transition: 0.3s; color: #64748b; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 14px; text-align: center; color: #64748b; }
         .tab.active { background: white; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        .input-group { margin-bottom: 20px; }
+        .input-group { margin-bottom: 18px; }
         label { font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px; margin-left: 4px; }
         input { 
             width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px; 
-            font-size: 15px; background: white; outline: none; transition: 0.3s;
+            font-size: 15px; outline: none;
         }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(238, 77, 45, 0.1); }
+        input:focus { border-color: var(--primary); background: #fffcfb; }
 
         button { 
             width: 100%; padding: 16px; background: var(--primary); border: none; color: white; 
-            font-weight: 800; border-radius: 14px; cursor: pointer; font-size: 16px; transition: 0.3s;
-            box-shadow: 0 10px 15px -3px rgba(238, 77, 45, 0.3);
+            font-weight: 800; border-radius: 14px; cursor: pointer; font-size: 16px;
+            box-shadow: 0 8px 15px rgba(238, 77, 45, 0.2);
         }
         button:hover { background: var(--primary-dark); transform: translateY(-2px); }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
         
-        #status { margin-top: 20px; font-size: 13px; padding: 14px; border-radius: 12px; display: none; text-align: center; font-weight: 700; }
+        #status { margin-top: 20px; font-size: 13px; padding: 12px; border-radius: 12px; display: none; text-align: center; font-weight: 700; }
         .hidden { display: none; }
-        
-        .otp-input { text-align: center; font-size: 32px !important; letter-spacing: 8px; font-weight: 800; color: var(--primary); }
+        .otp-display { text-align: center; font-size: 28px !important; letter-spacing: 10px; font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body>
 
-<div id="loader" style="color: white; font-weight: 800; font-size: 24px; letter-spacing: 4px;">WINZ STORE</div>
-
-<div class="container hidden" id="main-content">
+<div class="container" id="main-content">
     <div class="brand-box">
         <h1 class="brand-name">Winz<span>Store</span></h1>
-        <div style="font-size: 13px; color: #64748b; margin-top: 5px; font-weight: 600;">Digital Solution Marketplace</div>
+        <p style="font-size: 13px; color: #64748b; margin: 5px 0 0; font-weight: 600;">Premium Digital Marketplace</p>
     </div>
 
     <div class="tabs" id="main-tabs">
@@ -78,54 +75,48 @@
     </div>
 
     <div id="form-login">
-        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Username kamu"></div>
+        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Username"></div>
         <div class="input-group"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••"></div>
         <button id="btn-login" onclick="handleLogin()">Masuk Sekarang</button>
     </div>
 
     <div id="form-reg" class="hidden">
-        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Username unik"></div>
-        <div class="input-group"><label>Email Aktif</label><input type="email" id="r-email" placeholder="contoh@gmail.com"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 karakter"></div>
+        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Nama tanpa spasi"></div>
+        <div class="input-group"><label>Email</label><input type="email" id="r-email" placeholder="email@aktif.com"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 Karakter"></div>
         <button id="btn-otp" onclick="sendOTP()">Kirim Kode OTP</button>
     </div>
 
     <div id="form-otp" class="hidden">
         <div class="input-group">
-            <label style="text-align: center;">Verifikasi Kode OTP</label>
-            <input type="text" id="v-otp" maxlength="6" class="otp-input" placeholder="000000">
+            <label style="text-align: center;">Masukkan 6 Digit OTP</label>
+            <input type="text" id="v-otp" maxlength="6" class="otp-display" placeholder="000000">
         </div>
-        <button id="btn-verify" onclick="verifyAndSave()">Verifikasi & Daftar</button>
-        <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 15px; cursor: pointer; font-weight: 700;" onclick="showTab('reg')">Kembali</p>
+        <button id="btn-verify" onclick="verifyAndSave()">Verifikasi Akun</button>
+        <p style="text-align: center; font-size: 13px; color: #ee4d2d; margin-top: 15px; cursor: pointer; font-weight: 700;" onclick="showTab('reg')">Ganti Email/Batal</p>
     </div>
 
     <div id="status"></div>
 </div>
 
 <script>
+    // Konfigurasi Anda
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "winzshop-e91e0"
     };
     
-    const PUB_KEY = "lAlHEgmwuBl5srCKj"; 
-    const SERV_ID = "service_r0ltqzk";    
-    const TEMP_ID = "template_j89781k";   
+    const EMAILJS_PUB_KEY = "lAlHEgmwuBl5srCKj"; 
+    const EMAILJS_SERV_ID = "service_r0ltqzk";    
+    const EMAILJS_TEMP_ID = "template_j89781k";   
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    emailjs.init(PUB_KEY);
+    emailjs.init(EMAILJS_PUB_KEY);
 
     let generatedOTP = "";
-    let tempUserData = {};
-
-    window.onload = () => {
-        setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-            document.getElementById('main-content').classList.remove('hidden');
-        }, 800);
-    };
+    let tempUser = {};
 
     function notify(msg, type) {
         const s = document.getElementById('status');
@@ -142,89 +133,73 @@
         document.getElementById('main-tabs').classList.toggle('hidden', type === 'otp');
         document.getElementById('tab-login').classList.toggle('active', type === 'login');
         document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
-        document.getElementById('status').style.display = 'none';
     }
 
     async function sendOTP() {
         const user = document.getElementById('r-user').value.trim().toLowerCase();
-        const email = document.getElementById('r-email').value.trim().toLowerCase();
+        const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
         const btn = document.getElementById('btn-otp');
 
-        if(!user || !email || !pass) return notify("Lengkapi semua data!", "error");
-        if(pass.length < 6) return notify("Password minimal 6 karakter!", "error");
-        
+        if(!user || !email || !pass) return notify("Lengkapi data daftar!", "error");
+        if(pass.length < 6) return notify("Password terlalu pendek!", "error");
+
         btn.disabled = true;
-        notify("Mengecek ketersediaan data...", "success");
+        notify("Mengecek database...", "success");
 
         try {
-            // Cek Username
-            const userSnap = await db.ref('users/' + user).once('value');
-            if(userSnap.exists()) {
+            const snap = await db.ref('users/' + user).once('value');
+            if(snap.exists()) {
                 btn.disabled = false;
-                return notify("Username sudah dipakai!", "error");
-            }
-
-            // Cek Email agar tidak duplikat
-            const emailSnap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
-            if(emailSnap.exists()) {
-                btn.disabled = false;
-                return notify("Email sudah terdaftar!", "error");
+                return notify("Username sudah terpakai!", "error");
             }
 
             generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-            tempUserData = { user, email, pass };
+            tempUser = { user, email, pass };
 
-            const emailParams = {
+            // Sinkronkan variabel ini dengan Template EmailJS kamu
+            const params = {
                 to_email: email,
                 user_name: user,
-                otp: generatedOTP,
-                from_name: "WinzStore Official"
+                otp: generatedOTP
             };
 
-            await emailjs.send(SERV_ID, TEMP_ID, emailParams);
+            await emailjs.send(EMAILJS_SERV_ID, EMAILJS_TEMP_ID, params);
             
+            notify("OTP terkirim ke email!", "success");
             showTab('otp');
-            notify("OTP terkirim ke " + email, "success");
         } catch (err) {
             notify("Gagal mengirim email!", "error");
-            console.log(err);
+            console.error(err);
         } finally {
             btn.disabled = false;
         }
     }
 
     async function verifyAndSave() {
-        const inputOtp = document.getElementById('v-otp').value.trim();
-        const btn = document.getElementById('btn-verify');
+        const input = document.getElementById('v-otp').value.trim();
+        if(input !== generatedOTP) return notify("Kode OTP salah!", "error");
 
-        if(inputOtp !== generatedOTP) return notify("Kode OTP salah!", "error");
+        notify("Membuat akun...", "success");
+        const api = "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase();
 
-        btn.disabled = true;
-        notify("Mendaftarkan akun...", "success");
-
-        const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 10).toUpperCase();
-
-        const dataFinal = {
-            username: tempUserData.user,
-            email: tempUserData.email,
-            password: tempUserData.pass,
-            apikey: apiKey,
+        const finalData = {
+            username: tempUser.user,
+            email: tempUser.email,
+            password: tempUser.pass,
+            apikey: api,
             saldo: 0,
             role: "user",
-            created_at: new Date().toISOString() // Format standar ISO
+            joined: new Date().toLocaleDateString()
         };
 
         try {
-            // Simpan ke database dengan username sebagai KEY unik
-            await db.ref('users/' + tempUserData.user).set(dataFinal);
-            
-            localStorage.setItem("winz_user", JSON.stringify(dataFinal));
-            notify("Berhasil! Mengalihkan...", "success");
-            setTimeout(() => window.location.href = "dashboard.html", 1500);
+            await db.ref('users/' + tempUser.user).set(finalData);
+            localStorage.setItem("winz_user", JSON.stringify(finalData));
+            notify("Sukses! Mengalihkan...", "success");
+            setTimeout(() => window.location.href = "dashboard.html", 1200);
         } catch (e) {
             notify("Gagal simpan data!", "error");
-            btn.disabled = false;
         }
     }
 
@@ -232,26 +207,26 @@
         const user = document.getElementById('l-user').value.trim().toLowerCase();
         const pass = document.getElementById('l-pass').value.trim();
 
-        if(!user || !pass) return notify("Isi semua bidang!", "error");
+        if(!user || !pass) return notify("Isi username & password!", "error");
 
-        notify("Mencoba masuk...", "success");
+        notify("Memproses...", "success");
         try {
             const snap = await db.ref('users/' + user).once('value');
-            if(!snap.exists()) return notify("Akun tidak ditemukan!", "error");
-
-            const data = snap.val();
-            if(data.password === pass) {
-                localStorage.setItem("winz_user", JSON.stringify(data));
-                notify("Login Berhasil!", "success");
-                setTimeout(() => window.location.href = "dashboard.html", 1000);
+            if(snap.exists()) {
+                const d = snap.val();
+                if(d.password === pass) {
+                    localStorage.setItem("winz_user", JSON.stringify(d));
+                    window.location.href = "dashboard.html";
+                } else {
+                    notify("Password salah!", "error");
+                }
             } else {
-                notify("Password salah!", "error");
+                notify("Akun tidak ditemukan!", "error");
             }
         } catch (e) {
-            notify("Koneksi error!", "error");
+            notify("Gangguan koneksi!", "error");
         }
     }
 </script>
 </body>
 </html>
-
