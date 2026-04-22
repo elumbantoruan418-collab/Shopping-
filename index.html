@@ -103,17 +103,15 @@
 </div>
 
 <script>
-    // --- KONFIGURASI (SESUAI VIDEO) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "winzshop-e91e0"
     };
     
-    // Data EmailJS dari video lo
-    const PUB_KEY = "lAlHEgmwuBl5srCKj"; // Public Key dari tab 'Akun'
-    const SERV_ID = "service_r0ltqzk";    // Service ID Gmail lo
-    const TEMP_ID = "template_j89781k";   // Pastikan Template ID ini bener di dashboard
+    const PUB_KEY = "lAlHEgmwuBl5srCKj"; 
+    const SERV_ID = "service_r0ltqzk";    
+    const TEMP_ID = "template_j89781k";   
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -148,8 +146,8 @@
     }
 
     async function sendOTP() {
-        const user = document.getElementById('r-user').value.trim();
-        const email = document.getElementById('r-email').value.trim();
+        const user = document.getElementById('r-user').value.trim().toLowerCase();
+        const email = document.getElementById('r-email').value.trim().toLowerCase();
         const pass = document.getElementById('r-pass').value.trim();
         const btn = document.getElementById('btn-otp');
 
@@ -157,35 +155,40 @@
         if(pass.length < 6) return notify("Password minimal 6 karakter!", "error");
         
         btn.disabled = true;
-        notify("Mengecek ketersediaan username...", "success");
+        notify("Mengecek ketersediaan data...", "success");
 
         try {
+            // Cek Username
             const userSnap = await db.ref('users/' + user).once('value');
             if(userSnap.exists()) {
                 btn.disabled = false;
                 return notify("Username sudah dipakai!", "error");
             }
 
+            // Cek Email agar tidak duplikat
+            const emailSnap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+            if(emailSnap.exists()) {
+                btn.disabled = false;
+                return notify("Email sudah terdaftar!", "error");
+            }
+
             generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
             tempUserData = { user, email, pass };
-
-            notify("Mengirim kode OTP ke email...", "success");
 
             const emailParams = {
                 to_email: email,
                 user_name: user,
                 otp: generatedOTP,
-                from_name: "WinzStore Official",
-                pesan_pembuka: `Hai kk "${user}", terima kasih telah mendaftar di Winz Store. Layanan kami akan memberikan yang terbaik 🙏🙏`
+                from_name: "WinzStore Official"
             };
 
             await emailjs.send(SERV_ID, TEMP_ID, emailParams);
             
             showTab('otp');
-            notify("OTP terkirim! Cek folder Kotak Masuk/Spam.", "success");
+            notify("OTP terkirim ke " + email, "success");
         } catch (err) {
-            console.error(err);
-            notify("Gagal: " + (err.text || "Cek koneksi/kuota EmailJS"), "error");
+            notify("Gagal mengirim email!", "error");
+            console.log(err);
         } finally {
             btn.disabled = false;
         }
@@ -198,7 +201,7 @@
         if(inputOtp !== generatedOTP) return notify("Kode OTP salah!", "error");
 
         btn.disabled = true;
-        notify("Menyimpan akun...", "success");
+        notify("Mendaftarkan akun...", "success");
 
         const apiKey = "WINZ-" + Math.random().toString(16).slice(2, 10).toUpperCase();
 
@@ -209,41 +212,46 @@
             apikey: apiKey,
             saldo: 0,
             role: "user",
-            created_at: new Date().toLocaleString("id-ID")
+            created_at: new Date().toISOString() // Format standar ISO
         };
 
         try {
+            // Simpan ke database dengan username sebagai KEY unik
             await db.ref('users/' + tempUserData.user).set(dataFinal);
+            
             localStorage.setItem("winz_user", JSON.stringify(dataFinal));
-            notify("Pendaftaran Berhasil!", "success");
+            notify("Berhasil! Mengalihkan...", "success");
             setTimeout(() => window.location.href = "dashboard.html", 1500);
         } catch (e) {
-            notify("Database Error!", "error");
+            notify("Gagal simpan data!", "error");
             btn.disabled = false;
         }
     }
 
     async function handleLogin() {
-        const user = document.getElementById('l-user').value.trim();
+        const user = document.getElementById('l-user').value.trim().toLowerCase();
         const pass = document.getElementById('l-pass').value.trim();
 
         if(!user || !pass) return notify("Isi semua bidang!", "error");
 
-        notify("Memverifikasi...", "success");
+        notify("Mencoba masuk...", "success");
         try {
             const snap = await db.ref('users/' + user).once('value');
-            const data = snap.val();
+            if(!snap.exists()) return notify("Akun tidak ditemukan!", "error");
 
-            if(data && data.password === pass) {
+            const data = snap.val();
+            if(data.password === pass) {
                 localStorage.setItem("winz_user", JSON.stringify(data));
-                window.location.href = "dashboard.html";
+                notify("Login Berhasil!", "success");
+                setTimeout(() => window.location.href = "dashboard.html", 1000);
             } else {
-                notify("Username/Password salah!", "error");
+                notify("Password salah!", "error");
             }
         } catch (e) {
-            notify("Gagal login!", "error");
+            notify("Koneksi error!", "error");
         }
     }
 </script>
 </body>
 </html>
+
