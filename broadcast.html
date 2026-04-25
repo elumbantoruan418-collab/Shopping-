@@ -1,1 +1,175 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Member Dashboard - WinzStore</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #ee4d2d;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text-main);
+            margin: 0; padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; }
+
+        /* Header Profile */
+        .header-profile {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 30px; background: var(--card); padding: 15px 20px;
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .profile-info { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; }
+
+        /* Wallet Card */
+        .wallet-card {
+            background: linear-gradient(135deg, var(--primary), #ff7e5f);
+            padding: 25px; border-radius: 24px; margin-bottom: 25px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(238, 77, 45, 0.3);
+        }
+        .wallet-card::after {
+            content: ''; position: absolute; top: -20px; right: -20px;
+            width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;
+        }
+
+        /* Broadcast Section */
+        .broadcast-box {
+            background: var(--card); border-radius: 20px; padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;
+        }
+        .bc-title { display: flex; align-items: center; gap: 10px; color: var(--primary); font-weight: 800; margin-bottom: 15px; }
+        .bc-content { background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 15px; font-size: 14px; line-height: 1.6; border-left: 4px solid var(--primary); }
+
+        /* Menu Grid */
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .menu-item {
+            background: var(--card); padding: 20px; border-radius: 20px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s;
+        }
+        .menu-item:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .menu-item i { font-size: 24px; color: var(--primary); margin-bottom: 10px; }
+        .menu-item span { display: block; font-size: 13px; font-weight: 600; }
+
+        .api-box {
+            margin-top: 25px; background: #0f172a; padding: 15px; border-radius: 12px;
+            font-family: monospace; font-size: 12px; color: #10b981; border: 1px dashed #10b981;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .btn-logout {
+            width: 100%; margin-top: 30px; padding: 15px; background: transparent;
+            border: 2px solid #ef4444; color: #ef4444; border-radius: 15px;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        .btn-logout:hover { background: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-profile">
+        <div class="profile-info">
+            <div class="avatar" id="avatar-initial">U</div>
+            <div>
+                <div style="font-size: 12px; color: var(--text-dim);">Selamat Datang,</div>
+                <div id="display-name" style="font-weight: 800; font-size: 16px;">User</div>
+            </div>
+        </div>
+        <i class="fa-solid fa-bell" style="color: var(--text-dim); cursor: pointer;"></i>
+    </div>
+
+    <div class="wallet-card">
+        <div style="font-size: 14px; opacity: 0.9;">Saldo Akun</div>
+        <div id="display-saldo" style="font-size: 32px; font-weight: 800; margin: 10px 0;">Rp 0</div>
+        <div style="font-size: 12px; background: rgba(0,0,0,0.2); display: inline-block; padding: 4px 12px; border-radius: 20px;">
+            <i class="fa-solid fa-shield-halved"></i> Akun Terverifikasi
+        </div>
+    </div>
+
+    <div class="broadcast-box">
+        <div class="bc-title"><i class="fa-solid fa-bullhorn"></i> PENGUMUMAN</div>
+        <div class="bc-content">
+            Selamat datang di <b>WinzStore</b>! Nikmati layanan top-up, hosting, dan pembuatan bot otomatis dengan harga termurah. Silakan cek menu layanan di bawah.
+        </div>
+    </div>
+
+    <div class="menu-grid">
+        <div class="menu-item">
+            <i class="fa-solid fa-shop"></i>
+            <span>Marketplace</span>
+        </div>
+        <div class="menu-item">
+            <i class="fa-solid fa-server"></i>
+            <span>Sewa Hosting</span>
+        </div>
+        <div class="menu-item">
+            <i class="fa-solid fa-robot"></i>
+            <span>Bot Store</span>
+        </div>
+        <div class="menu-item">
+            <i class="fa-solid fa-headset"></i>
+            <span>Bantuan</span>
+        </div>
+    </div>
+
+    <div style="margin-top: 25px; font-size: 13px; color: var(--text-dim); font-weight: 600;">API KEY ANDA</div>
+    <div class="api-box">
+        <span id="display-api">WINZ-XXXX-XXXX</span>
+        <i class="fa-solid fa-copy" style="cursor: pointer;" onclick="copyApi()"></i>
+    </div>
+
+    <button class="btn-logout" onclick="logout()">Keluar Akun</button>
+</div>
+
+<script>
+    // Ambil data dari LocalStorage
+    const userData = JSON.parse(localStorage.getItem("winz_user"));
+
+    window.onload = () => {
+        if(!userData) {
+            window.location.href = "login.html"; // Balik ke login jika tidak ada data
+            return;
+        }
+
+        // Tampilkan Data
+        document.getElementById('display-name').innerText = userData.username;
+        document.getElementById('avatar-initial').innerText = userData.username.charAt(0).toUpperCase();
+        document.getElementById('display-saldo').innerText = "Rp " + (userData.saldo || 0).toLocaleString();
+        document.getElementById('display-api').innerText = userData.apikey || "BELUM ADA";
+    };
+
+    function copyApi() {
+        const api = document.getElementById('display-api').innerText;
+        navigator.clipboard.writeText(api);
+        alert("API Key berhasil disalin!");
+    }
+
+    function logout() {
+        localStorage.removeItem("winz_user");
+        window.location.href = "login.html";
+    }
+</script>
+
+</body>
+</html>
 
