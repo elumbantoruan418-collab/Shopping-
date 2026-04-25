@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - WinzStore</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #ee4d2d;
+            --bg: #f8fafc;
+            --sidebar: #0f172a;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body { background: var(--bg); margin: 0; display: flex; }
+
+        /* Sidebar Style */
+        .sidebar {
+            width: 260px; background: var(--sidebar); height: 100vh;
+            color: white; padding: 30px 20px; position: fixed;
+        }
+
+        .brand { font-size: 24px; font-weight: 800; margin-bottom: 40px; color: var(--primary); }
+        .brand span { color: white; }
+
+        .nav-item {
+            padding: 15px; border-radius: 12px; cursor: pointer;
+            margin-bottom: 10px; display: flex; align-items: center; transition: 0.3s;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(238, 77, 45, 0.2); color: var(--primary); }
+        .nav-item i { margin-right: 15px; width: 20px; }
+
+        /* Main Content */
+        .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 40px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-info img { width: 45px; border-radius: 50%; border: 2px solid var(--primary); }
+
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1dfr); gap: 25px; margin-bottom: 40px; }
+        .stat-card {
+            background: white; padding: 25px; border-radius: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+            display: flex; align-items: center; gap: 20px;
+        }
+        .stat-icon {
+            width: 60px; height: 60px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
+        }
+
+        /* Table Style */
+        .data-card {
+            background: white; border-radius: 20px; padding: 30px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; padding: 15px; color: #64748b; font-size: 14px; border-bottom: 2px solid #f1f5f9; }
+        td { padding: 15px; font-size: 14px; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
+        
+        .badge { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+        .badge-user { background: #dcfce7; color: #16a34a; }
+
+        .btn-logout { 
+            background: #ef4444; color: white; border: none; padding: 10px 20px; 
+            border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">Winz<span>Admin</span></div>
+        <div class="nav-item active"><i class="fa-solid fa-gauge"></i> Dashboard</div>
+        <div class="nav-item"><i class="fa-solid fa-users"></i> Manage Users</div>
+        <div class="nav-item"><i class="fa-solid fa-box"></i> Products</div>
+        <div class="nav-item"><i class="fa-solid fa-wallet"></i> Transactions</div>
+        <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-sign-out"></i> Keluar</button>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h2 style="margin: 0;">Halo, Erwin! 👋</h2>
+                <p style="color: #64748b; margin: 5px 0 0;">Selamat datang kembali di panel kontrol.</p>
+            </div>
+            <div class="user-info">
+                <div style="text-align: right;">
+                    <div style="font-weight: 800;">Erwin Official</div>
+                    <div style="font-size: 12px; color: var(--primary);">Main Admin</div>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=Erwin&background=ee4d2d&color=fff" alt="Admin">
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fa-solid fa-users"></i></div>
+                <div>
+                    <div style="color: #64748b; font-size: 14px;">Total User</div>
+                    <div id="count-users" style="font-size: 24px; font-weight: 800;">0</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #fef2f2; color: #ef4444;"><i class="fa-solid fa-shopping-cart"></i></div>
+                <div>
+                    <div style="color: #64748b; font-size: 14px;">Pesanan Baru</div>
+                    <div style="font-size: 24px; font-weight: 800;">12</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #f0fdf4; color: #22c55e;"><i class="fa-solid fa-money-bill-wave"></i></div>
+                <div>
+                    <div style="color: #64748b; font-size: 14px;">Total Saldo</div>
+                    <div style="font-size: 24px; font-weight: 800;">Rp 2.5M</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="data-card">
+            <h3 style="margin-top: 0;">Daftar Pengguna Terbaru</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>USERNAME</th>
+                        <th>EMAIL</th>
+                        <th>SALDO</th>
+                        <th>ROLE</th>
+                        <th>JOINED</th>
+                    </tr>
+                </thead>
+                <tbody id="user-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+<script>
+    // Konfigurasi Firebase Anda
+    const firebaseConfig = {
+        apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
+        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "winzshop-e91e0"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Fungsi Logout
+    function logout() {
+        localStorage.removeItem("winz_user");
+        window.location.href = "login.html"; // Sesuaikan nama file login kamu
+    }
+
+    // Ambil Data User dari Firebase
+    function loadUsers() {
+        db.ref('users').on('value', (snapshot) => {
+            const tableBody = document.getElementById('user-table-body');
+            const countElem = document.getElementById('count-users');
+            tableBody.innerHTML = "";
+            
+            let usersCount = 0;
+
+            snapshot.forEach((childSnapshot) => {
+                const user = childSnapshot.val();
+                usersCount++;
+
+                const row = `
+                    <tr>
+                        <td style="font-weight: 700;">${user.username}</td>
+                        <td>${user.email}</td>
+                        <td style="color: #16a34a; font-weight: 700;">Rp ${user.saldo.toLocaleString()}</td>
+                        <td><span class="badge badge-user">${user.role}</span></td>
+                        <td>${user.joined || '-'}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+            
+            countElem.innerText = usersCount;
+        });
+    }
+
+    // Keamanan: Cek apakah benar Erwin yang masuk
+    window.onload = () => {
+        const session = JSON.parse(localStorage.getItem("winz_user"));
+        if(!session || session.username.toLowerCase() !== "erwin") {
+            alert("Akses Ditolak! Hanya Admin yang boleh masuk.");
+            window.location.href = "login.html";
+        } else {
+            loadUsers();
+        }
+    };
+</script>
+</body>
+</html>
