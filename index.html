@@ -1,216 +1,573 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinzStore - Premium Marketplace</title>
-    
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    
-    <style>
-        :root { 
-            --primary: #ee4d2d; 
-            --primary-dark: #d73211; 
-            --bg: #0f172a; 
-            --card-bg: #ffffff;
-        }
-        
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; }
-        
-        body { 
-            background: radial-gradient(circle at top right, #334155, #0f172a);
-            display: flex; justify-content: center; align-items: center; 
-            min-height: 100vh; margin: 0; padding: 20px;
-        }
-        
-        .container { 
-            background: var(--card-bg); padding: 40px 30px; border-radius: 24px; 
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 400px;
-        }
-        
-        .brand-box { text-align: center; margin-bottom: 30px; }
-        .brand-name { font-size: 34px; font-weight: 800; margin: 0; letter-spacing: -1.5px; color: var(--primary); }
-        .brand-name span { color: #0f172a; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel hosting</title>
 
-        .tabs { display: flex; background: #f1f5f9; border-radius: 14px; padding: 4px; margin-bottom: 25px; }
-        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 14px; text-align: center; color: #64748b; }
-        .tab.active { background: white; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+<style>
+/* ===== RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-        .input-group { margin-bottom: 18px; }
-        label { font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px; margin-left: 4px; }
-        input { 
-            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px; 
-            font-size: 15px; outline: none;
-        }
-        input:focus { border-color: var(--primary); background: #fffcfb; }
+/* ===== BODY ===== */
+body {
+  font-family: Arial, sans-serif;
+  background: #020617;
+  color: #e5e7eb;
+  min-height: 100vh;
+}
 
-        button { 
-            width: 100%; padding: 16px; background: var(--primary); border: none; color: white; 
-            font-weight: 800; border-radius: 14px; cursor: pointer; font-size: 16px;
-            box-shadow: 0 8px 15px rgba(238, 77, 45, 0.2);
-        }
-        button:hover { background: var(--primary-dark); transform: translateY(-2px); }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
-        
-        #status { margin-top: 20px; font-size: 13px; padding: 12px; border-radius: 12px; display: none; text-align: center; font-weight: 700; }
-        .hidden { display: none; }
-    </style>
+/* ===== HEADER ===== */
+header {
+  padding: 16px;
+  border-bottom: 1px solid #1e293b;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 20px;
+  letter-spacing: 2px;
+  color: #f8fafc;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+  padding: 20px;
+}
+
+/* ===== MENU ROW (PAKSA SAMPING) ===== */
+.menu-row {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;       /* kalau layar kecil, bisa geser */
+  padding-bottom: 10px;
+}
+
+/* ===== MENU CARD ===== */
+.menu-card {
+  min-width: 180px;       /* PENTING: biar gak turun */
+  background: #f8fafc;
+  color: #020617;
+  padding: 18px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.25s;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+  flex-shrink: 0;         /* PAKSA TETAP SAMPING */
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  background: #e5e7eb;
+}
+
+/* ===== ICON ===== */
+.menu-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+/* ===== TITLE ===== */
+.menu-title {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* ===== DESC ===== */
+.menu-desc {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+/* ===== Running ke kiri dengan gradient ===== */
+.runningg-text {
+  width: 100%;
+  overflow: hidden;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+  padding: 10px 0;
+}
+
+.runningg-text span {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: bold;
+
+  /* Gradient warna-warni */
+  background: linear-gradient(
+    90deg,
+    #f87171,  /* merah */
+    #fbbf24,  /* kuning */
+    #34d399,  /* hijau */
+    #38bdf8,  /* biru muda */
+    #a78bfa   /* ungu */
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  /* Animasi */
+  animation: runLeft 12s linear infinite, rainbowShift 4s linear infinite;
+}
+
+/* Animasi teks ke kiri */
+@keyframes runLeft {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Gradient bergerak */
+@keyframes rainbowShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* ===== Running ke kanan biasa ===== */
+.winz-text {
+  width: 100%;
+  overflow: hidden;
+  background: #020617;
+  border-bottom: 1px solid #1e293b;
+  padding: 10px 0;
+}
+
+.winz-text span {
+  display: inline-block;
+  white-space: nowrap;
+  font-size: 20px;
+  color: #e5e7eb;
+  padding-left: 100%;
+  animation: runRight 12s linear infinite;
+}
+
+/* Animasi teks ke kanan */
+@keyframes runRight {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+  .menu-list {
+  margin-top: 10px;
+  padding-left: 20px;
+  color: #020617;
+  background: #e5e7eb;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.menu-list li {
+  margin: 5px 0;
+  cursor: pointer;
+}
+/* kita coba*/
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(10,10,16,0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 9999;
+}
+
+/* ITEM */
+.bottom-nav .nav-item {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.bottom-nav .nav-icon {
+  font-size: 20px;
+  display: block;
+}
+
+/* ACTIVE */
+.bottom-nav .nav-item.active {
+  color: #ffd700;
+}
+
+.bottom-nav .nav-item.active .nav-icon {
+  text-shadow: 0 0 10px rgba(255,215,0,0.8);
+}
+
+/* Biar konten gak ketutup */
+body {
+  padding-bottom: 70px;
+}
+</style>
 </head>
 <body>
 
-<div class="container" id="main-content">
-    <div class="brand-box">
-        <h1 class="brand-name">Winz<span>Store</span></h1>
-        <p style="font-size: 13px; color: #64748b; margin: 5px 0 0; font-weight: 600;">Premium Digital Marketplace</p>
+  <!-- MENU TOP UP -->
+
+</div>
+<div class="runningg-text">
+  <span>⚡ SELAMAT DATANG DI ORDER SHOP MURAH • VPS PANEL • SCRIPT VPS • NOKOS • PANEL ⚡</span>
+</div>
+<style>
+          .btn-upload {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            
+            /* Styling Visual */
+            background-color: #ee4d2d; /* Oranye Shopee */
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 8px;
+            
+            /* Layout Isi */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            /* Efek & Animasi */
+            box-shadow: 0 4px 12px rgba(238, 77, 45, 0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Efek Hover (Saat Disentuh) */
+        .btn-upload:hover {
+            background-color: #d73211;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(238, 77, 45, 0.4);
+        }
+
+        /* Efek Klik (Active) */
+        .btn-upload:active {
+            transform: translateY(0);
+        }
+
+        /* Ikon SVG Shopee/Keranjang */
+        .shopee-icon {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Responsif untuk HP Kecil */
+        @media (max-width: 480px) {
+            .btn-upload {
+                top: 15px;
+                right: 15px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<a href="indkex.html" class="secret-link"></a>
+  <style>.secret-link { 
+  position: fixed;   /* Mengunci posisi di layar, tidak ikut tergulung (scroll) */
+  top: 0;            /* Tempel ke paling atas */
+  left: 0;           /* Tempel ke paling kiri */
+  width: 40px;       /* Lebar area klik */
+  height: 40px;      /* Tinggi area klik */
+  z-index: 10001;    /* Angka tinggi supaya dia berada di atas elemen lain (seperti header) */
+  background: transparent; /* Membuatnya bening/tak terlihat */
+}
+  </style>
+    <a href="jb.html" class="btn-upload">
+        <svg class="shopee-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
+        <span>Upload Jualanmu</span>
+    </a>
+
+    
+  
+<div class="container">
+
+  <!-- MENU SELALU SAMPING -->
+  <div class="menu-row">
+  <div class="menu-card" id="menu-vps" data-menu="vps">
+    <div class="menu-icon">🖥️</div>
+    <div class="menu-title">Panel hostig</div>
+    <div class="menu-desc">Kelola server otomatis</div>
+  </div>
+
+  <a href="script.html" style="text-decoration: none; color: inherit;">
+    <div class="menu-card">
+      <div class="menu-icon" id="vpsbtnjd">🚀</div>
+      <div class="menu-title">Script</div>
+      <div class="menu-desc">otomatis</div>
+    </div>
+  </a>
+
+  <div class="menu-card" onclick="location.href='suntik.html'" style="cursor: pointer;">
+    <div class="menu-icon">💉</div>
+    <div class="menu-title">Suntik</div>
+    <div class="menu-desc">Menambah pengikut banyak</div>
+  </div>
+
+  <div class="menu-card">
+    <div class="menu-icon">📲</div>
+    <div class="menu-title">Nokos</div>
+    <div class="menu-desc">WA & Telegram</div>
+  </div>
+  </div>
+  
+<div class="winz-text">
+  <span>╰┈➣ geser krii liat menu lain nya</span>
+</div>
+  <style>
+    /* CSS Khusus Market */
+    .header-market { padding: 15px; color: #38bdf8; font-size: 18px; font-weight: bold; }
+    #marketList { 
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 12px; 
+        padding: 0 15px; 
+    }
+    .product-card { 
+        background: #0d0d1a; 
+        border-radius: 12px; 
+        overflow: hidden; 
+        border: 1px solid rgba(56, 189, 248, 0.1); 
+        cursor: pointer;
+    }
+    .img-card img { width: 100%; height: 110px; object-fit: cover; }
+    .info { padding: 8px; }
+    .p-title { font-size: 12px; color: #fff; height: 32px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .p-price { color: #ee4d2d; font-weight: bold; font-size: 14px; margin-top: 5px; }
+
+    /* Modal Detail */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #030305; z-index: 10002; display: none; overflow-y: auto; }
+    .modal-header { padding: 15px; background: #0d0d1a; display: flex; align-items: center; position: sticky; top: 0; z-index: 11; }
+    .detail-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; height: 300px; scrollbar-width: none; background: #000; }
+    .detail-slider::-webkit-scrollbar { display: none; }
+    .detail-slider img { flex-shrink: 0; width: 100%; height: 100%; object-fit: contain; scroll-snap-align: center; transition: 0.3s; }
+    .detail-info { padding: 20px; }
+    .detail-price { color: #ee4d2d; font-size: 22px; font-weight: 800; }
+    .detail-title { font-size: 16px; font-weight: 600; margin: 10px 0; color: #fff; }
+    .detail-sku { font-size: 11px; color: #38bdf8; margin-bottom: 10px; opacity: 0.8; }
+    .detail-desc { font-size: 14px; color: #94a3b8; line-height: 1.5; white-space: pre-line; }
+    .bottom-nav-modal { position: fixed; bottom: 0; width: 100%; padding: 15px; background: rgba(13,13,26,0.9); backdrop-filter: blur(10px); }
+    .btn-wa { display: block; background: #ee4d2d; color: #fff; text-align: center; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px; }
+    .zoomed { transform: scale(1.5); object-fit: contain !important; }
+    .empty-state { grid-column: span 2; text-align: center; padding: 50px 0; opacity: 0.5; font-size: 13px; }
+</style>
+
+    <div class="header-market"><i class="fas fa-shopping-bag"></i> XTR MARKET</div>
+    
+    <div id="marketList"></div>
+
+    <div id="productModal" class="modal">
+        <div class="modal-header">
+            <i class="fas fa-arrow-left" style="cursor:pointer; font-size: 18px;" onclick="closeDetail()"></i>
+            <span style="font-weight: 600; margin-left: 15px;">Detail Produk</span>
+        </div>
+        
+        <div id="detailSlider" class="detail-slider"></div>
+        
+        <div class="detail-info">
+            <div id="detailPrice" class="detail-price"></div>
+            <div id="detailTitle" class="detail-title"></div>
+            <div id="detailSKU" class="detail-sku"></div>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
+            <div id="detailDesc" class="detail-desc"></div>
+        </div>
+
+        <div style="height: 100px;"></div> 
+        <div class="bottom-nav-modal">
+            <a id="btnBeli" href="#" class="btn-wa" target="_blank">BELI SEKARANG</a>
+        </div>
     </div>
 
-    <div class="tabs" id="main-tabs">
-        <div id="tab-login" class="tab active" onclick="showTab('login')">Masuk</div>
-        <div id="tab-reg" class="tab" onclick="showTab('reg')">Daftar</div>
-    </div>
+    <script>
+        const ADMIN_WA = "639319692180"; 
+        let currentProducts = [];
+        let autoSlideInterval;
 
-    <div id="form-login">
-        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Username"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••"></div>
-        <button id="btn-login" onclick="handleLogin()">Masuk Sekarang</button>
-    </div>
+        function renderMarket() {
+            const container = document.getElementById('marketList');
+            const rawData = JSON.parse(localStorage.getItem("dataJB")) || [];
+            currentProducts = [...rawData].reverse();
 
-    <div id="form-reg" class="hidden">
-        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Nama tanpa spasi"></div>
-        <div class="input-group"><label>Email</label><input type="email" id="r-email" placeholder="email@aktif.com"></div>
-        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 Karakter"></div>
-        <button id="btn-reg" onclick="handleRegister()">Daftar & Masuk</button>
-    </div>
+            if(currentProducts.length === 0) {
+                container.innerHTML = `<div class="empty-state"><p>Belum ada jualan di upload.</p></div>`;
+                return;
+            }
 
-    <div id="status"></div>
+            container.innerHTML = currentProducts.map((item, index) => {
+                const cover = (item.fotos && item.fotos.length > 0) ? item.fotos[0] : 'https://via.placeholder.com/150';
+                return `
+                <div class="product-card" onclick="openDetail(${index})">
+                    <div class="img-card"><img src="${cover}"></div>
+                    <div class="info">
+                        <p class="p-title">${item.judul || 'Produk XTR'}</p>
+                        <p class="p-price">Rp ${parseInt(item.harga).toLocaleString('id-ID')}</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openDetail(index) {
+            const item = currentProducts[index];
+            const modal = document.getElementById('productModal');
+            const slider = document.getElementById('detailSlider');
+            
+            slider.innerHTML = item.fotos.map(f => `<img src="${f}" onclick="toggleZoom(this)">`).join('');
+            slider.scrollLeft = 0;
+
+            const hargaStr = parseInt(item.harga).toLocaleString('id-ID');
+            document.getElementById('detailPrice').innerText = `Rp ${hargaStr}`;
+            document.getElementById('detailTitle').innerText = item.judul;
+            document.getElementById('detailSKU').innerText = `SKU: ${item.sku || 'XTR-' + item.id}`;
+            document.getElementById('detailDesc').innerText = item.deskripsi;
+            
+            // Format Pesan WA
+            const textWA = encodeURIComponent(`Halo Admin, Saya ingin membeli produk ini:\n\n*Produk:* ${item.judul}\n*Harga:* Rp ${hargaStr}\n*Kode:* ${item.sku || item.id}\n\nMohon bantuannya untuk MC.`);
+            document.getElementById('btnBeli').href = `https://wa.me/${ADMIN_WA}?text=${textWA}`;
+
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            // Auto Slide Logic
+            clearInterval(autoSlideInterval);
+            if (item.fotos.length > 1) {
+                let sIndex = 0;
+                autoSlideInterval = setInterval(() => {
+                    if (!slider.querySelector('.zoomed')) {
+                        sIndex = (sIndex + 1) % item.fotos.length;
+                        slider.scrollTo({ left: slider.clientWidth * sIndex, behavior: 'smooth' });
+                    }
+                }, 5000);
+            }
+        }
+
+        function toggleZoom(img) { 
+            img.classList.toggle('zoomed');
+            document.getElementById('detailSlider').style.overflowX = img.classList.contains('zoomed') ? "hidden" : "auto";
+        }
+
+        function closeDetail() {
+            clearInterval(autoSlideInterval);
+            document.getElementById('productModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onload = renderMarket;
+    </script>
+  
+<div id="content"></div>
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-text">Home</span>
+  </div>
+
+
+
+<div class="nav-item" id="nav-activity">
+  <span class="nav-icon">📊</span>
+  <span class="nav-text">Activity</span>
 </div>
 
+  <div class="nav-item" id= "cekbiobtn">
+    <span class="nav-icon">👤</span>
+    <span class="nav-text">sprot winz</span>
+  </div>
+</div>
 <script>
-    // Konfigurasi Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
-        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "winzshop-e91e0"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+// Ambil semua menu-card
+const menus = document.querySelectorAll('.menu-card');
 
-    // Akun Admin Utama
-    const MASTER_ADMIN = "erwin";
-    const MASTER_PASS = "Erwin28092010";
+menus.forEach(menu => {
+  menu.addEventListener('click', () => {
+    let list = menu.querySelector('.menu-list');
 
-    function notify(msg, type) {
-        const s = document.getElementById('status');
-        s.innerText = msg;
-        s.style.display = 'block';
-        s.style.background = type === 'error' ? '#fee2e2' : '#dcfce7';
-        s.style.color = type === 'error' ? '#dc2626' : '#16a34a';
+    if (!list) {
+      list = document.createElement('ul');
+      list.classList.add('menu-list');
+
+      // Ambil data dari attribute data-list
+      const items = JSON.parse(menu.getAttribute('data-list'));
+      list.innerHTML = items.map(item => `<li>${item}</li>`).join('');
+
+      menu.appendChild(list);
+    } else {
+      list.remove(); // toggle
     }
+  });
+});
 
-    function showTab(type) {
-        document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
-        document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
-        document.getElementById('tab-login').classList.toggle('active', type === 'login');
-        document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
-    }
 
-    // Fungsi untuk mengarahkan halaman berdasarkan username
-    function checkAndRedirect(username) {
-        if(username.toLowerCase() === MASTER_ADMIN) {
-            window.location.href = "admin.html";
-        } else {
-            window.location.href = "broadcast.html";
-        }
-    }
 
-    // --- LOGIKA DAFTAR ---
-    async function handleRegister() {
-        const user = document.getElementById('r-user').value.trim().toLowerCase();
-        const email = document.getElementById('r-email').value.trim();
-        const pass = document.getElementById('r-pass').value.trim();
-        const btn = document.getElementById('btn-reg');
 
-        if(!user || !email || !pass) return notify("Lengkapi semua kolom!", "error");
-        if(user.includes(" ")) return notify("Username tidak boleh pakai spasi!", "error");
-        if(user === MASTER_ADMIN) return notify("Username admin tidak bisa digunakan!", "error");
-
-        btn.disabled = true;
-        notify("Mengecek ketersediaan...", "success");
-
-        try {
-            const snap = await db.ref('users/' + user).once('value');
-            if(snap.exists()) {
-                btn.disabled = false;
-                return notify("Username sudah terdaftar!", "error");
-            }
-
-            const userData = {
-                username: user,
-                email: email,
-                password: pass,
-                apikey: "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                saldo: 0,
-                role: "user",
-                joined: new Date().toLocaleDateString('id-ID')
-            };
-
-            await db.ref('users/' + user).set(userData);
-            localStorage.setItem("winz_user", JSON.stringify(userData));
-            
-            notify("Berhasil terdaftar!", "success");
-            setTimeout(() => { checkAndRedirect(user); }, 800);
-
-        } catch (err) {
-            btn.disabled = false;
-            notify("Gagal mendaftar!", "error");
-        }
-    }
-
-    // --- LOGIKA LOGIN ---
-    async function handleLogin() {
-        const user = document.getElementById('l-user').value.trim().toLowerCase();
-        const pass = document.getElementById('l-pass').value.trim();
-
-        if(!user || !pass) return notify("Isi username & password!", "error");
-
-        // Cek Admin Statis (Sesuai Permintaan)
-        if(user === MASTER_ADMIN && pass === MASTER_PASS) {
-            const adminData = { username: user, role: "admin" };
-            localStorage.setItem("winz_user", JSON.stringify(adminData));
-            return window.location.href = "admin.html";
-        }
-
-        notify("Memproses login...", "success");
-        try {
-            const snap = await db.ref('users/' + user).once('value');
-            if(snap.exists()) {
-                const d = snap.val();
-                if(d.password === pass) {
-                    localStorage.setItem("winz_user", JSON.stringify(d));
-                    checkAndRedirect(user);
-                } else {
-                    notify("Password salah!", "error");
-                }
-            } else {
-                notify("Akun tidak ditemukan!", "error");
-            }
-        } catch (e) {
-            notify("Gangguan database!", "error");
-        }
-    }
-
-    window.onload = () => {
-        const session = localStorage.getItem("winz_user");
-        if(session) {
-            const data = JSON.parse(session);
-            checkAndRedirect(data.username);
-        }
-    }
+<script>
+  document.getElementById("nav-deposit")?.addEventListener("click", () => {
+  window.location.href = "menu-vps";
+});
 </script>
-</body>
-</html>
 
+
+<script>
+  document.getElementById("nav-deposit")?.addEventListener("click", () => {
+  window.location.href = "deposit.html";
+});
+</script>
+<script>
+  document.getElementById("menu-vps")?.addEventListener("click", () => {
+  window.location.href = "panel.html";
+});
+  </script>
+
+<script>
+  // Ambil tombol
+  const cekBioBtn = document.getElementById("cekbiobtn");
+
+  // Hanya pas tombol ada
+  if (cekBioBtn) {
+    cekBioBtn.addEventListener("click", () => {
+      // Pastikan nama file persis sama dengan di repo
+      // Misal file di repo: profil.html (huruf kecil)
+      window.location.href = "profil.html";
+    });
+  }
+</script>
+<script>
+  // Logika untuk pindah halaman saat menu Activity diklik
+  document.getElementById("nav-activity").addEventListener("click", () => {
+    window.location.href = "aktivitas.html";
+    
+  });
+</script>
+<Script> 
+document.getElementById("cekbiobtn").addEventListener("click",()=>{
+  window.location.href="script.html"</Script>
+
+  <script>
+document.getElementById('cekbiobtn').addEventListener('click', function() {
+    window.location.href = "profil.html";
+});
+</script>
+  
