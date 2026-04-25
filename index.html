@@ -7,7 +7,6 @@
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     
@@ -58,7 +57,6 @@
         
         #status { margin-top: 20px; font-size: 13px; padding: 12px; border-radius: 12px; display: none; text-align: center; font-weight: 700; }
         .hidden { display: none; }
-        .otp-display { text-align: center; font-size: 28px !important; letter-spacing: 10px; font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body>
@@ -84,39 +82,22 @@
         <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Nama tanpa spasi"></div>
         <div class="input-group"><label>Email</label><input type="email" id="r-email" placeholder="email@aktif.com"></div>
         <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 Karakter"></div>
-        <button id="btn-otp" onclick="sendOTP()">Kirim Kode OTP</button>
-    </div>
-
-    <div id="form-otp" class="hidden">
-        <div class="input-group">
-            <label style="text-align: center;">Masukkan 6 Digit OTP</label>
-            <input type="text" id="v-otp" maxlength="6" class="otp-display" placeholder="000000">
-        </div>
-        <button id="btn-verify" onclick="verifyAndSave()">Verifikasi Akun</button>
-        <p style="text-align: center; font-size: 13px; color: #ee4d2d; margin-top: 15px; cursor: pointer; font-weight: 700;" onclick="showTab('reg')">Ganti Email/Batal</p>
+        <button id="btn-reg" onclick="handleRegister()">Daftar & Masuk</button>
     </div>
 
     <div id="status"></div>
 </div>
 
 <script>
-    // Konfigurasi Anda
+    // Konfigurasi Firebase (Tetap sesuai database Anda)
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "winzshop-e91e0"
     };
     
-    const EMAILJS_PUB_KEY = "lAlHEgmwuBl5srCKj"; 
-    const EMAILJS_SERV_ID = "service_r0ltqzk";    
-    const EMAILJS_TEMP_ID = "template_j89781k";   
-    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    emailjs.init(EMAILJS_PUB_KEY);
-
-    let generatedOTP = "";
-    let tempUser = {};
 
     function notify(msg, type) {
         const s = document.getElementById('status');
@@ -129,94 +110,80 @@
     function showTab(type) {
         document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
         document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
-        document.getElementById('form-otp').classList.toggle('hidden', type !== 'otp');
-        document.getElementById('main-tabs').classList.toggle('hidden', type === 'otp');
         document.getElementById('tab-login').classList.toggle('active', type === 'login');
         document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
     }
 
-    async function sendOTP() {
+    // --- LOGIKA DAFTAR LANGSUNG SIMPAN ---
+    async function handleRegister() {
         const user = document.getElementById('r-user').value.trim().toLowerCase();
         const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
-        const btn = document.getElementById('btn-otp');
+        const btn = document.getElementById('btn-reg');
 
-        if(!user || !email || !pass) return notify("Lengkapi data daftar!", "error");
-        if(pass.length < 6) return notify("Password terlalu pendek!", "error");
+        // Validasi Input
+        if(!user || !email || !pass) return notify("Lengkapi semua kolom!", "error");
+        if(user.includes(" ")) return notify("Username tidak boleh pakai spasi!", "error");
+        if(pass.length < 6) return notify("Password minimal 6 karakter!", "error");
 
         btn.disabled = true;
-        notify("Mengecek database...", "success");
+        notify("Mendaftarkan akun...", "success");
 
         try {
+            // 1. Cek apakah username sudah ada di database (agar tidak menimpa user lain)
             const snap = await db.ref('users/' + user).once('value');
             if(snap.exists()) {
                 btn.disabled = false;
-                return notify("Username sudah terpakai!", "error");
+                return notify("Username sudah terdaftar!", "error");
             }
 
-            generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-            tempUser = { user, email, pass };
-
-            // Sinkronkan variabel ini dengan Template EmailJS kamu
-            const params = {
-                to_email: email,
-                user_name: user,
-                otp: generatedOTP
+            // 2. Buat data user baru
+            const apiKey = "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const userData = {
+                username: user,
+                email: email,
+                password: pass, // Note: Untuk produksi, disarankan enkripsi password
+                apikey: apiKey,
+                saldo: 0,
+                role: "user",
+                joined: new Date().toLocaleDateString('id-ID')
             };
 
-            await emailjs.send(EMAILJS_SERV_ID, EMAILJS_TEMP_ID, params);
+            // 3. SIMPAN KE FIREBASE (Tanpa OTP)
+            await db.ref('users/' + user).set(userData);
             
-            notify("OTP terkirim ke email!", "success");
-            showTab('otp');
+            // 4. SIMPAN KE SESSION (LocalStorage) agar tidak perlu login lagi
+            localStorage.setItem("winz_user", JSON.stringify(userData));
+            
+            notify("Berhasil! Mengalihkan...", "success");
+            
+            // 5. LANGSUNG KE BROADCAST
+            setTimeout(() => {
+                window.location.href = "broadcast.html";
+            }, 800);
+
         } catch (err) {
-            notify("Gagal mengirim email!", "error");
-            console.error(err);
-        } finally {
             btn.disabled = false;
+            notify("Gagal mendaftar. Coba lagi!", "error");
+            console.error(err);
         }
     }
 
-    async function verifyAndSave() {
-        const input = document.getElementById('v-otp').value.trim();
-        if(input !== generatedOTP) return notify("Kode OTP salah!", "error");
-
-        notify("Membuat akun...", "success");
-        const api = "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-
-        const finalData = {
-            username: tempUser.user,
-            email: tempUser.email,
-            password: tempUser.pass,
-            apikey: api,
-            saldo: 0,
-            role: "user",
-            joined: new Date().toLocaleDateString()
-        };
-
-        try {
-            await db.ref('users/' + tempUser.user).set(finalData);
-            localStorage.setItem("winz_user", JSON.stringify(finalData));
-            notify("Sukses! Mengalihkan...", "success");
-            setTimeout(() => window.location.href = "dashboard.html", 1200);
-        } catch (e) {
-            notify("Gagal simpan data!", "error");
-        }
-    }
-
+    // --- LOGIKA LOGIN ---
     async function handleLogin() {
         const user = document.getElementById('l-user').value.trim().toLowerCase();
         const pass = document.getElementById('l-pass').value.trim();
 
         if(!user || !pass) return notify("Isi username & password!", "error");
 
-        notify("Memproses...", "success");
+        notify("Memproses login...", "success");
         try {
             const snap = await db.ref('users/' + user).once('value');
             if(snap.exists()) {
                 const d = snap.val();
                 if(d.password === pass) {
                     localStorage.setItem("winz_user", JSON.stringify(d));
-                    window.location.href = "dashboard.html";
+                    window.location.href = "broadcast.html";
                 } else {
                     notify("Password salah!", "error");
                 }
@@ -224,7 +191,14 @@
                 notify("Akun tidak ditemukan!", "error");
             }
         } catch (e) {
-            notify("Gangguan koneksi!", "error");
+            notify("Gangguan koneksi database!", "error");
+        }
+    }
+
+    // Cek jika user sudah login sebelumnya, langsung lempar ke broadcast
+    window.onload = () => {
+        if(localStorage.getItem("winz_user")) {
+            window.location.href = "broadcast.html";
         }
     }
 </script>
