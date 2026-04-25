@@ -20,10 +20,8 @@
         }
 
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        
         body { background: var(--bg); margin: 0; display: flex; }
 
-        /* Sidebar Style */
         .sidebar {
             width: 260px; background: var(--sidebar); height: 100vh;
             color: white; padding: 30px 20px; position: fixed;
@@ -39,15 +37,13 @@
         .nav-item:hover, .nav-item.active { background: rgba(238, 77, 45, 0.2); color: var(--primary); }
         .nav-item i { margin-right: 15px; width: 20px; }
 
-        /* Main Content */
         .main-content { margin-left: 260px; width: calc(100% - 260px); padding: 40px; }
 
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         .user-info { display: flex; align-items: center; gap: 15px; }
         .user-info img { width: 45px; border-radius: 50%; border: 2px solid var(--primary); }
 
-        /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1dfr); gap: 25px; margin-bottom: 40px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 40px; }
         .stat-card {
             background: white; padding: 25px; border-radius: 20px;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
@@ -58,7 +54,6 @@
             display: flex; align-items: center; justify-content: center; font-size: 24px;
         }
 
-        /* Table Style */
         .data-card {
             background: white; border-radius: 20px; padding: 30px;
             box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
@@ -68,11 +63,12 @@
         td { padding: 15px; font-size: 14px; color: #1e293b; border-bottom: 1px solid #f1f5f9; }
         
         .badge { padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
-        .badge-user { background: #dcfce7; color: #16a34a; }
+        .badge-online { background: #dcfce7; color: #16a34a; }
+        .badge-offline { background: #f1f5f9; color: #64748b; }
 
         .btn-logout { 
-            background: #ef4444; color: white; border: none; padding: 10px 20px; 
-            border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 50px;
+            background: #ef4444; color: white; border: none; padding: 12px 20px; width: 100%;
+            border-radius: 12px; cursor: pointer; font-weight: 700; margin-top: 50px;
         }
     </style>
 </head>
@@ -111,41 +107,39 @@
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background: #fef2f2; color: #ef4444;"><i class="fa-solid fa-shopping-cart"></i></div>
+                <div class="stat-icon" style="background: #f0fdf4; color: #22c55e;"><i class="fa-solid fa-circle-dot"></i></div>
                 <div>
-                    <div style="color: #64748b; font-size: 14px;">Pesanan Baru</div>
-                    <div style="font-size: 24px; font-weight: 800;">12</div>
+                    <div style="color: #64748b; font-size: 14px;">User Online</div>
+                    <div id="online-users" style="font-size: 24px; font-weight: 800;">0</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon" style="background: #f0fdf4; color: #22c55e;"><i class="fa-solid fa-money-bill-wave"></i></div>
+                <div class="stat-icon" style="background: #fff7ed; color: #f97316;"><i class="fa-solid fa-wallet"></i></div>
                 <div>
                     <div style="color: #64748b; font-size: 14px;">Total Saldo</div>
-                    <div style="font-size: 24px; font-weight: 800;">Rp 2.5M</div>
+                    <div id="total-saldo" style="font-size: 24px; font-weight: 800;">Rp 0</div>
                 </div>
             </div>
         </div>
 
         <div class="data-card">
-            <h3 style="margin-top: 0;">Daftar Pengguna Terbaru</h3>
+            <h3 style="margin-top: 0;">Daftar Pengguna & Status Online</h3>
             <table>
                 <thead>
                     <tr>
                         <th>USERNAME</th>
                         <th>EMAIL</th>
                         <th>SALDO</th>
-                        <th>ROLE</th>
+                        <th>STATUS</th>
                         <th>JOINED</th>
                     </tr>
                 </thead>
-                <tbody id="user-table-body">
-                    </tbody>
+                <tbody id="user-table-body"></tbody>
             </table>
         </div>
     </div>
 
 <script>
-    // Konfigurasi Firebase Anda
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -155,31 +149,44 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Fungsi Logout
+    // FUNGSI LOGOUT (DIBETULKAN KE index.html)
     function logout() {
         localStorage.removeItem("winz_user");
-        window.location.href = "login.html"; // Sesuaikan nama file login kamu
+        window.location.href = "index.html"; 
     }
 
-    // Ambil Data User dari Firebase
     function loadUsers() {
         db.ref('users').on('value', (snapshot) => {
             const tableBody = document.getElementById('user-table-body');
             const countElem = document.getElementById('count-users');
-            tableBody.innerHTML = "";
+            const onlineElem = document.getElementById('online-users');
+            const saldoElem = document.getElementById('total-saldo');
             
+            tableBody.innerHTML = "";
             let usersCount = 0;
+            let onlineCount = 0;
+            let totalSaldo = 0;
 
             snapshot.forEach((childSnapshot) => {
                 const user = childSnapshot.val();
                 usersCount++;
+                totalSaldo += parseInt(user.saldo || 0);
+
+                // Cek Status Online (Gunakan logika jika data online ada, atau buat dummy)
+                // Di sini kita cek properti 'status' dari database
+                const isOnline = user.status === "online";
+                if(isOnline) onlineCount++;
 
                 const row = `
                     <tr>
                         <td style="font-weight: 700;">${user.username}</td>
                         <td>${user.email}</td>
-                        <td style="color: #16a34a; font-weight: 700;">Rp ${user.saldo.toLocaleString()}</td>
-                        <td><span class="badge badge-user">${user.role}</span></td>
+                        <td style="color: #16a34a; font-weight: 700;">Rp ${parseInt(user.saldo || 0).toLocaleString()}</td>
+                        <td>
+                            <span class="badge ${isOnline ? 'badge-online' : 'badge-offline'}">
+                                ${isOnline ? '● Online' : '○ Offline'}
+                            </span>
+                        </td>
                         <td>${user.joined || '-'}</td>
                     </tr>
                 `;
@@ -187,15 +194,16 @@
             });
             
             countElem.innerText = usersCount;
+            onlineElem.innerText = onlineCount;
+            saldoElem.innerText = "Rp " + totalSaldo.toLocaleString();
         });
     }
 
-    // Keamanan: Cek apakah benar Erwin yang masuk
     window.onload = () => {
         const session = JSON.parse(localStorage.getItem("winz_user"));
+        // Jika bukan erwin atau tidak login, tendang ke index.html
         if(!session || session.username.toLowerCase() !== "erwin") {
-            alert("Akses Ditolak! Hanya Admin yang boleh masuk.");
-            window.location.href = "login.html";
+            window.location.href = "index.html";
         } else {
             loadUsers();
         }
@@ -203,3 +211,4 @@
 </script>
 </body>
 </html>
+
