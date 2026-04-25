@@ -283,14 +283,35 @@ body {
 <body>
 <a href="indkex.html" class="secret-link"></a>
   <style>.secret-link { 
-  position: fixed;   /* Mengunci posisi di layar, tidak ikut tergulung (scroll) */
-  top: 0;            /* Tempel ke paling atas */
-  left: 0;           /* Tempel ke paling kiri */
-  width: 40px;       /* Lebar area klik */
-  height: 40px;      /* Tinggi area klik */
-  z-index: 10001;    /* Angka tinggi supaya dia berada di atas elemen lain (seperti header) */
-  background: transparent; /* Membuatnya bening/tak terlihat */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 45px;
+  height: 45px;
+  z-index: 10001;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.5s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
+/* Efek pas disentuh (Hover) atau ditekan */
+.secret-link:hover {
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+}
+
+/* Tambahkan sedikit tanda titik kecil di tengah yang cuma keliatan kalau beneran dipelototin */
+.secret-link::after {
+  content: '';
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05); /* Sangat transparan */
+  border-radius: 50%;
+}
+
   </style>
     <a href="jb.html" class="btn-upload">
         <svg class="shopee-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
