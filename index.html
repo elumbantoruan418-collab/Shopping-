@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinzStore - Login & Register</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary: #ee4d2d; 
+            --primary-dark: #d73211; 
+            --bg: #0f172a; 
+            --card-bg: #ffffff;
+        }
+        
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.3s ease; }
+        
+        body { 
+            background: radial-gradient(circle at top right, #334155, #0f172a);
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
+        }
+        
+        .container { 
+            background: var(--card-bg); padding: 40px 30px; border-radius: 24px; 
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); width: 100%; max-width: 400px;
+        }
+        
+        .brand-box { text-align: center; margin-bottom: 30px; }
+        .brand-name { font-size: 34px; font-weight: 800; margin: 0; letter-spacing: -1.5px; color: var(--primary); }
+        .brand-name span { color: #0f172a; }
+
+        .tabs { display: flex; background: #f1f5f9; border-radius: 14px; padding: 4px; margin-bottom: 25px; }
+        .tab { flex: 1; padding: 12px; cursor: pointer; border-radius: 11px; font-weight: 700; font-size: 14px; text-align: center; color: #64748b; }
+        .tab.active { background: white; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        .input-group { margin-bottom: 18px; }
+        label { font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px; margin-left: 4px; }
+        input { 
+            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px; 
+            font-size: 15px; outline: none;
+        }
+        input:focus { border-color: var(--primary); background: #fffcfb; }
+
+        button { 
+            width: 100%; padding: 16px; background: var(--primary); border: none; color: white; 
+            font-weight: 800; border-radius: 14px; cursor: pointer; font-size: 16px;
+            box-shadow: 0 8px 15px rgba(238, 77, 45, 0.2);
+        }
+        button:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        
+        #status { margin-top: 20px; font-size: 13px; padding: 12px; border-radius: 12px; display: none; text-align: center; font-weight: 700; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="brand-box">
+        <h1 class="brand-name">Winz<span>Store</span></h1>
+        <p style="font-size: 13px; color: #64748b; margin: 5px 0 0; font-weight: 600;">Premium Digital Marketplace</p>
+    </div>
+
+    <div class="tabs">
+        <div id="tab-login" class="tab active" onclick="showTab('login')">Masuk</div>
+        <div id="tab-reg" class="tab" onclick="showTab('reg')">Daftar</div>
+    </div>
+
+    <div id="form-login">
+        <div class="input-group"><label>Username</label><input type="text" id="l-user" placeholder="Username"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="l-pass" placeholder="••••••••"></div>
+        <button id="btn-login" onclick="handleLogin()">Masuk Sekarang</button>
+    </div>
+
+    <div id="form-reg" class="hidden">
+        <div class="input-group"><label>Username</label><input type="text" id="r-user" placeholder="Nama tanpa spasi"></div>
+        <div class="input-group"><label>Email</label><input type="email" id="r-email" placeholder="email@aktif.com"></div>
+        <div class="input-group"><label>Password</label><input type="password" id="r-pass" placeholder="Min. 6 Karakter"></div>
+        <button id="btn-reg" onclick="handleRegister()">Daftar & Masuk</button>
+    </div>
+
+    <div id="status"></div>
+</div>
+
+<script>
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
+        databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "winzshop-e91e0"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Akun Admin Utama
+    const MASTER_ADMIN = "erwin";
+    const MASTER_PASS = "Erwin28092010";
+
+    function notify(msg, type) {
+        const s = document.getElementById('status');
+        s.innerText = msg;
+        s.style.display = 'block';
+        s.style.background = type === 'error' ? '#fee2e2' : '#dcfce7';
+        s.style.color = type === 'error' ? '#dc2626' : '#16a34a';
+    }
+
+    function showTab(type) {
+        document.getElementById('form-login').classList.toggle('hidden', type !== 'login');
+        document.getElementById('form-reg').classList.toggle('hidden', type !== 'reg');
+        document.getElementById('tab-login').classList.toggle('active', type === 'login');
+        document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
+    }
+
+    function checkAndRedirect(username) {
+        if(username.toLowerCase() === MASTER_ADMIN) {
+            window.location.href = "admin.html";
+        } else {
+            window.location.href = "broadcast.html";
+        }
+    }
+
+    // LOGIKA DAFTAR
+    async function handleRegister() {
+        const user = document.getElementById('r-user').value.trim().toLowerCase();
+        const email = document.getElementById('r-email').value.trim();
+        const pass = document.getElementById('r-pass').value.trim();
+        const btn = document.getElementById('btn-reg');
+
+        if(!user || !email || !pass) return notify("Lengkapi semua kolom!", "error");
+        if(user === MASTER_ADMIN) return notify("Username admin tidak bisa digunakan!", "error");
+
+        btn.disabled = true;
+        notify("Mengecek ketersediaan...", "success");
+
+        try {
+            const snap = await db.ref('users/' + user).once('value');
+            if(snap.exists()) {
+                btn.disabled = false;
+                return notify("Username sudah terdaftar!", "error");
+            }
+
+            const userData = {
+                username: user,
+                email: email,
+                password: pass,
+                apikey: "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
+                saldo: 0,
+                role: "user",
+                joined: new Date().toLocaleDateString('id-ID')
+            };
+
+            await db.ref('users/' + user).set(userData);
+            localStorage.setItem("winz_user", JSON.stringify(userData));
+            
+            notify("Berhasil terdaftar!", "success");
+            setTimeout(() => { checkAndRedirect(user); }, 800);
+
+        } catch (err) {
+            btn.disabled = false;
+            notify("Gagal mendaftar!", "error");
+        }
+    }
+
+    // LOGIKA LOGIN
+    async function handleLogin() {
+        const user = document.getElementById('l-user').value.trim().toLowerCase();
+        const pass = document.getElementById('l-pass').value.trim();
+
+        if(!user || !pass) return notify("Isi username & password!", "error");
+
+        if(user === MASTER_ADMIN && pass === MASTER_PASS) {
+            const adminData = { username: user, role: "admin", saldo: "Unlimited" };
+            localStorage.setItem("winz_user", JSON.stringify(adminData));
+            return window.location.href = "admin.html";
+        }
+
+        notify("Memproses login...", "success");
+        try {
+            const snap = await db.ref('users/' + user).once('value');
+            if(snap.exists()) {
+                const d = snap.val();
+                if(d.password === pass) {
+                    localStorage.setItem("winz_user", JSON.stringify(d));
+                    checkAndRedirect(user);
+                } else {
+                    notify("Password salah!", "error");
+                }
+            } else {
+                notify("Akun tidak ditemukan!", "error");
+            }
+        } catch (e) {
+            notify("Gangguan database!", "error");
+        }
+    }
+
+    window.onload = () => {
+        const session = localStorage.getItem("winz_user");
+        if(session) {
+            const data = JSON.parse(session);
+            checkAndRedirect(data.username);
+        }
+    }
+</script>
+</body>
+</html>
