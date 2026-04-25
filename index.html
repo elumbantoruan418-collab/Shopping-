@@ -89,7 +89,7 @@
 </div>
 
 <script>
-    // Konfigurasi Firebase (Tetap sesuai database Anda)
+    // Konfigurasi Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyBoumczf6v_dPL1OxMmTDpUGmZQ7Bcm_oQ",
         databaseURL: "https://winzshop-e91e0-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -98,6 +98,10 @@
     
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // Data Admin Utama
+    const ADMIN_USER = "erwin";
+    const ADMIN_PASS = "Erwin28092010";
 
     function notify(msg, type) {
         const s = document.getElementById('status');
@@ -114,76 +118,78 @@
         document.getElementById('tab-reg').classList.toggle('active', type === 'reg');
     }
 
-    // --- LOGIKA DAFTAR LANGSUNG SIMPAN ---
+    // REDIRECT LOGIC
+    function redirectUser(username) {
+        if(username.toLowerCase() === ADMIN_USER) {
+            window.location.href = "admin.html";
+        } else {
+            window.location.href = "broadcast.html";
+        }
+    }
+
+    // REGISTER
     async function handleRegister() {
         const user = document.getElementById('r-user').value.trim().toLowerCase();
         const email = document.getElementById('r-email').value.trim();
         const pass = document.getElementById('r-pass').value.trim();
         const btn = document.getElementById('btn-reg');
 
-        // Validasi Input
-        if(!user || !email || !pass) return notify("Lengkapi semua kolom!", "error");
-        if(user.includes(" ")) return notify("Username tidak boleh pakai spasi!", "error");
-        if(pass.length < 6) return notify("Password minimal 6 karakter!", "error");
-
+        if(!user || !email || !pass) return notify("Lengkapi data!", "error");
+        
         btn.disabled = true;
-        notify("Mendaftarkan akun...", "success");
+        notify("Proses pendaftaran...", "success");
 
         try {
-            // 1. Cek apakah username sudah ada di database (agar tidak menimpa user lain)
             const snap = await db.ref('users/' + user).once('value');
             if(snap.exists()) {
                 btn.disabled = false;
-                return notify("Username sudah terdaftar!", "error");
+                return notify("Username sudah ada!", "error");
             }
 
-            // 2. Buat data user baru
-            const apiKey = "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase();
             const userData = {
                 username: user,
                 email: email,
-                password: pass, // Note: Untuk produksi, disarankan enkripsi password
-                apikey: apiKey,
+                password: pass,
+                apikey: "WINZ-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
                 saldo: 0,
-                role: "user",
+                role: (user === ADMIN_USER) ? "admin" : "user",
                 joined: new Date().toLocaleDateString('id-ID')
             };
 
-            // 3. SIMPAN KE FIREBASE (Tanpa OTP)
             await db.ref('users/' + user).set(userData);
-            
-            // 4. SIMPAN KE SESSION (LocalStorage) agar tidak perlu login lagi
             localStorage.setItem("winz_user", JSON.stringify(userData));
             
-            notify("Berhasil! Mengalihkan...", "success");
-            
-            // 5. LANGSUNG KE BROADCAST
-            setTimeout(() => {
-                window.location.href = "broadcast.html";
-            }, 800);
+            notify("Pendaftaran Berhasil!", "success");
+            setTimeout(() => redirectUser(user), 800);
 
         } catch (err) {
             btn.disabled = false;
-            notify("Gagal mendaftar. Coba lagi!", "error");
-            console.error(err);
+            notify("Gagal mendaftar!", "error");
         }
     }
 
-    // --- LOGIKA LOGIN ---
+    // LOGIN
     async function handleLogin() {
         const user = document.getElementById('l-user').value.trim().toLowerCase();
         const pass = document.getElementById('l-pass').value.trim();
 
-        if(!user || !pass) return notify("Isi username & password!", "error");
+        if(!user || !pass) return notify("Isi data login!", "error");
 
-        notify("Memproses login...", "success");
+        // Cek Langsung Admin via Input (Tanpa DB jika ingin lebih cepat)
+        if(user === ADMIN_USER && pass === ADMIN_PASS) {
+            const adminData = { username: user, role: "admin" };
+            localStorage.setItem("winz_user", JSON.stringify(adminData));
+            return window.location.href = "admin.html";
+        }
+
+        notify("Mengecek akun...", "success");
         try {
             const snap = await db.ref('users/' + user).once('value');
             if(snap.exists()) {
                 const d = snap.val();
                 if(d.password === pass) {
                     localStorage.setItem("winz_user", JSON.stringify(d));
-                    window.location.href = "broadcast.html";
+                    redirectUser(user);
                 } else {
                     notify("Password salah!", "error");
                 }
@@ -191,14 +197,16 @@
                 notify("Akun tidak ditemukan!", "error");
             }
         } catch (e) {
-            notify("Gangguan koneksi database!", "error");
+            notify("Koneksi gagal!", "error");
         }
     }
 
-    // Cek jika user sudah login sebelumnya, langsung lempar ke broadcast
+    // Auto Login Check
     window.onload = () => {
-        if(localStorage.getItem("winz_user")) {
-            window.location.href = "broadcast.html";
+        const session = localStorage.getItem("winz_user");
+        if(session) {
+            const data = JSON.parse(session);
+            redirectUser(data.username);
         }
     }
 </script>
